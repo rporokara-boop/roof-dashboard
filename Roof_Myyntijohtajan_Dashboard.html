@@ -347,12 +347,19 @@ function checkAuth(){
 <!-- ═══════════ PAGE: PIZZA ═══════════ -->
 <div class="page" id="page-pizza">
   <div class="sh" style="margin-bottom:16px">Valitse toimisto — näet sen myynnin välittäjäkohtaisina siivuina</div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px" id="pizzaOfficeButtons"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="pizzaOfficeButtons"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--roof-border)">
+    <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-right:4px">Jakso:</span>
+    <button id="pizzaBtnKumul" onclick="pizzaSetMode('kumul')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-teal);background:var(--roof-teal);color:white;font-weight:700;font-size:.72rem;cursor:pointer">Kumulatiivinen</button>
+    <button id="pizzaBtnYear" onclick="pizzaSetMode('year')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-border);background:white;color:var(--text);font-weight:700;font-size:.72rem;cursor:pointer">Koko vuosi</button>
+    <div style="width:1px;height:18px;background:var(--roof-border);margin:0 3px;align-self:center"></div>
+    <div id="pizzaMonthBtns" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+  </div>
   <div class="row">
     <div class="card" style="flex:1.2;min-width:300px">
       <div class="card-title">🍕 <span id="pizzaTitle">Valitse toimisto</span></div>
       <div class="pizza-wrap">
-        <div style="position:relative;max-width:280px;margin:0 auto"><canvas id="pizzaChart"></canvas><div id="pizzaCenter" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none"><div style="font-size:1.1rem;font-weight:900;color:var(--roof-navy)" id="pizzaCenterVal"></div><div style="font-size:.65rem;color:var(--muted)">Myynti YTD</div></div></div>
+        <div style="position:relative;max-width:280px;margin:0 auto"><canvas id="pizzaChart"></canvas><div id="pizzaCenter" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none"><div style="font-size:1.1rem;font-weight:900;color:var(--roof-navy)" id="pizzaCenterVal"></div><div style="font-size:.65rem;color:var(--muted)" id="pizzaCenterLabel">Myynti YTD</div></div></div>
         <ul class="pizza-legend" id="pizzaLegend"></ul>
       </div>
     </div>
@@ -579,11 +586,62 @@ document.getElementById('highlights').innerHTML=[
 </div>`).join('');
 
 // ── PIZZA PAGE ────────────────────────────────────
-let pizzaChartInst=null, pizzaBarInst=null;
+let pizzaChartInst=null, pizzaBarInst=null, pizzaCurrentOffice=null;
+let pizzaMode='kumul', pizzaMonthSel=[];
+const MONTHS_SHORT=['Tam','Hel','Maa','Huh','Tou','Kes','Hei','Elo','Syy','Lok','Mar','Jou'];
+
+function pizzaGetVal(d){
+  if(pizzaMode==='kumul') return d.myynti;
+  if(pizzaMode==='year') return (d.myynti_monthly||[]).reduce((s,v)=>s+v,0);
+  return pizzaMonthSel.reduce((s,mi)=>s+(d.myynti_monthly&&d.myynti_monthly[mi]||0),0);
+}
+
+function pizzaSetMode(mode){
+  pizzaMode=mode; pizzaMonthSel=[];
+  updatePizzaModeUI();
+  if(pizzaCurrentOffice) buildPizzaForOffice(pizzaCurrentOffice);
+}
+
+function pizzaToggleMonth(idx){
+  pizzaMode='months';
+  const i=pizzaMonthSel.indexOf(idx);
+  if(i>=0){pizzaMonthSel.splice(i,1);if(!pizzaMonthSel.length)pizzaMode='kumul';}
+  else pizzaMonthSel.push(idx);
+  updatePizzaModeUI();
+  if(pizzaCurrentOffice) buildPizzaForOffice(pizzaCurrentOffice);
+}
+
+function updatePizzaModeUI(){
+  const k=document.getElementById('pizzaBtnKumul'),y=document.getElementById('pizzaBtnYear');
+  if(!k) return;
+  const tl='var(--roof-teal)',ny='var(--roof-navy)',bdr='var(--roof-border)',wh='white',tx='var(--text)';
+  const kA=pizzaMode==='kumul',yA=pizzaMode==='year';
+  k.style.cssText=`padding:5px 11px;border-radius:14px;border:2px solid ${kA?tl:bdr};background:${kA?tl:wh};color:${kA?wh:tx};font-weight:700;font-size:.72rem;cursor:pointer`;
+  y.style.cssText=`padding:5px 11px;border-radius:14px;border:2px solid ${yA?tl:bdr};background:${yA?tl:wh};color:${yA?wh:tx};font-weight:700;font-size:.72rem;cursor:pointer`;
+  document.querySelectorAll('.pizza-m-btn').forEach(b=>{
+    const mi=parseInt(b.dataset.mi),ac=pizzaMode==='months'&&pizzaMonthSel.includes(mi);
+    b.style.cssText=`padding:5px 9px;border-radius:14px;border:2px solid ${ac?ny:bdr};background:${ac?ny:wh};color:${ac?wh:tx};font-weight:700;font-size:.71rem;cursor:pointer`;
+  });
+  const cl=document.getElementById('pizzaCenterLabel');
+  if(cl){
+    if(pizzaMode==='kumul') cl.textContent='Myynti YTD';
+    else if(pizzaMode==='year') cl.textContent='Myynti 2026';
+    else cl.textContent='Myynti '+(pizzaMonthSel.length===1?MONTHS_SHORT[pizzaMonthSel[0]]:pizzaMonthSel.map(m=>MONTHS_SHORT[m]).join('+'));
+  }
+}
 
 function buildPizzaOfficeButtons(){
   const el=document.getElementById('pizzaOfficeButtons');
   if(el.innerHTML) return;
+  // Build month buttons once
+  const mb=document.getElementById('pizzaMonthBtns');
+  if(mb&&!mb.innerHTML) MONTHS_SHORT.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.textContent=s; b.dataset.mi=i; b.className='pizza-m-btn';
+    b.style.cssText='padding:5px 9px;border-radius:14px;border:2px solid var(--roof-border);background:white;color:var(--text);font-weight:700;font-size:.71rem;cursor:pointer';
+    b.onclick=()=>pizzaToggleMonth(i);
+    mb.appendChild(b);
+  });
   const officesWithAgents=['Espoo','Helsinki','Oulu','Tampere','Hyvinkää','Raasepori','Kymenlaakso','Pori','Järvenpää','Salo','Turku','Vuokraus'];
   officesWithAgents.forEach(o=>{
     const btn=document.createElement('button');
@@ -599,23 +657,25 @@ function buildPizzaOfficeButtons(){
 }
 
 function buildPizzaForOffice(officeName){
-  // Get agents for this office
+  pizzaCurrentOffice=officeName;
+  updatePizzaModeUI();
   const officeAgents=Object.entries(agents)
     .filter(([,d])=>d.toimisto.includes(officeName)||d.toimisto===officeName)
-    .filter(([,d])=>d.myynti>0)
-    .sort((a,b)=>b[1].myynti-a[1].myynti);
+    .map(([n,d])=>[n,d,pizzaGetVal(d)])
+    .filter(([,,v])=>v>0)
+    .sort((a,b)=>b[2]-a[2]);
 
   if(!officeAgents.length){
     document.getElementById('pizzaTitle').textContent=officeName+' — ei myyntidataa';
     return;
   }
 
-  const total=officeAgents.reduce((s,[,d])=>s+d.myynti,0);
+  const total=officeAgents.reduce((s,[,,v])=>s+v,0);
   document.getElementById('pizzaTitle').textContent=officeName;
   document.getElementById('pizzaCenterVal').textContent=fmtK(Math.round(total));
 
   const labels=officeAgents.map(([n])=>n);
-  const vals=officeAgents.map(([,d])=>d.myynti);
+  const vals=officeAgents.map(([,,v])=>v);
   const colors=officeAgents.map((_,i)=>PALETTE[i%PALETTE.length]);
 
   // Donut
@@ -636,9 +696,9 @@ function buildPizzaForOffice(officeName){
   });
 
   // Legend
-  document.getElementById('pizzaLegend').innerHTML=officeAgents.map(([name,d],i)=>{
-    const pct=(d.myynti/total*100).toFixed(1);
-    return `<li><div class="dot" style="background:${colors[i]}"></div><div class="name">${name}</div><div class="val">${fmtK(Math.round(d.myynti))} · ${pct}%</div></li>`;
+  document.getElementById('pizzaLegend').innerHTML=officeAgents.map(([name,,v],i)=>{
+    const pct=(v/total*100).toFixed(1);
+    return `<li><div class="dot" style="background:${colors[i]}"></div><div class="name">${name}</div><div class="val">${fmtK(Math.round(v))} · ${pct}%</div></li>`;
   }).join('');
 
   // Bar
