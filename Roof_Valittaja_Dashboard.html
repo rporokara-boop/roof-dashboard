@@ -543,6 +543,58 @@ function loadAgent(){
     document.getElementById('donutNote').textContent='Ei riittävästi dataa';
   }
 }
+
+// ── GOOGLE SHEETS LIVE DATA ───────────────────────
+const SHEETS_BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vQOnFcSaTUJDA9W4Dtd1NIXDNEiLxFCFLZ9acxyU14pgtu6T0l0tQu5vJh-3Bjf8YTrrwy38gcwpntS/pub?output=csv&gid=';
+const MONTHS=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
+
+function parseFinNum(s){
+  if(!s||s==='-'||s==='')return 0;
+  return parseFloat(s.replace(/\./g,'').replace(',','.').replace(/[€\s]/g,''))||0;
+}
+function parseCSVRow(line){
+  const r=[];let c='';let q=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){q=!q;}else if(line[i]===','&&!q){r.push(c);c='';}else c+=line[i];
+  }
+  r.push(c);return r.map(v=>v.trim());
+}
+function csvRows(text){
+  const lines=text.trim().split('\n');
+  const hdrs=parseCSVRow(lines[0]);
+  return lines.slice(1).map(l=>{
+    const v=parseCSVRow(l);const row={};
+    hdrs.forEach((h,i)=>row[h]=v[i]||'');return row;
+  }).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Välittäjä'&&r['Välittäjä']!=='-');
+}
+
+async function loadFromSheets(){
+  try{
+    const [t1,t2]=await Promise.all([
+      fetch(SHEETS_BASE+'1703238765').then(r=>r.text()),
+      fetch(SHEETS_BASE+'1973988137').then(r=>r.text())
+    ]);
+    csvRows(t1).forEach(row=>{
+      const name=row['Välittäjä'];
+      if(!D.agents[name])D.agents[name]={toimisto:'',myynti:0,tapaamiset:0,avg_score:0,nps:0,n_feedback:0,asked_pct:0,top_successes:[],top_failures:[],top_developments:[],comments:[],myynti_monthly:Array(12).fill(0),tapaamiset_monthly:Array(12).fill(0)};
+      D.agents[name].toimisto=row['Toimisto']||D.agents[name].toimisto;
+      D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
+      D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
+    });
+    csvRows(t2).forEach(row=>{
+      const name=row['Välittäjä'];
+      if(!D.agents[name])return;
+      D.agents[name].tapaamiset=parseFinNum(row['Kumulatiivinen']);
+      D.agents[name].tapaamiset_monthly=MONTHS.map(m=>parseFinNum(row[m]));
+    });
+    const cur=sel.value;
+    sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+    if(sel.value)loadAgent();
+  }catch(e){
+    console.warn('Sheets-data ei saatavilla, käytetään tallennettua dataa.',e);
+  }
+}
+loadFromSheets();
 </script>
 </body>
 </html>
