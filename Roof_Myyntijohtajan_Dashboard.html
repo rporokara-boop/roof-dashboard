@@ -942,9 +942,12 @@ function csvRows(text){const lines=text.trim().split('\n');const hdrs=parseCSVRo
 
 async function loadFromSheets(){
   try{
-    const [t1,t2]=await Promise.all([
+    const [t1,t2,t3,t4,t5]=await Promise.all([
       fetch(SHEETS_BASE+'1703238765').then(r=>r.text()),
-      fetch(SHEETS_BASE+'1973988137').then(r=>r.text())
+      fetch(SHEETS_BASE+'1973988137').then(r=>r.text()),
+      fetch(SHEETS_BASE+'1332606454').then(r=>r.text()),
+      fetch(SHEETS_BASE+'1321415806').then(r=>r.text()),
+      fetch(SHEETS_BASE+'37348123').then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
@@ -954,8 +957,7 @@ async function loadFromSheets(){
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
     csvRows(t2).forEach(row=>{
-      const name=row['Välittäjä'];
-      if(!D.agents[name])return;
+      const name=row['Välittäjä'];if(!D.agents[name])return;
       D.agents[name].tapaamiset=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].tapaamiset_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
@@ -964,22 +966,56 @@ async function loadFromSheets(){
     Object.values(D.agents).forEach(ag=>{
       const o=ag.toimisto;if(!o)return;
       if(!offAgg[o])offAgg[o]={myynti:0,tapaamiset:0,mMyynti:Array(12).fill(0),mTap:Array(12).fill(0)};
-      offAgg[o].myynti+=ag.myynti;
-      offAgg[o].tapaamiset+=ag.tapaamiset;
+      offAgg[o].myynti+=ag.myynti;offAgg[o].tapaamiset+=ag.tapaamiset;
       ag.myynti_monthly.forEach((v,i)=>offAgg[o].mMyynti[i]+=v);
       ag.tapaamiset_monthly.forEach((v,i)=>offAgg[o].mTap[i]+=v);
     });
+    // Aggregate toimeksiannot, kaupat, näytöt per office
+    const offToimarit={},offKaupat={},offNaytot={};
+    [t3,t4,t5].forEach((txt,idx)=>{
+      const agg=idx===0?offToimarit:idx===1?offKaupat:offNaytot;
+      csvRows(txt).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Tiimi').forEach(row=>{
+        const o=row['Toimisto'];if(!o)return;
+        agg[o]=(agg[o]||0)+parseFinNum(row['Kumulatiivinen']);
+      });
+    });
+    // Update D.offices with all metrics and computed conversion rates
     Object.keys(offAgg).forEach(o=>{
-      if(D.offices[o]){D.offices[o].myynti=Math.round(offAgg[o].myynti);D.offices[o].tapaamiset=offAgg[o].tapaamiset;}
+      if(!D.offices[o])return;
+      D.offices[o].myynti=Math.round(offAgg[o].myynti);
+      D.offices[o].tapaamiset=offAgg[o].tapaamiset;
+      const toimarit=offToimarit[o]||0;
+      const kaupat=offKaupat[o]||0;
+      const naytot=offNaytot[o]||0;
+      if(toimarit)D.offices[o].toimarit=Math.round(toimarit);
+      if(kaupat)D.offices[o].kaupat=Math.round(kaupat*10)/10;
+      if(naytot)D.offices[o].naytot=Math.round(naytot);
+      const tap=offAgg[o].tapaamiset;
+      if(tap>0&&kaupat>0)D.offices[o].tap_kauppa=Math.round(kaupat/tap*1000)/10;
+      if(tap>0&&toimarit>0)D.offices[o].tap_toimari=Math.round(toimarit/tap*1000)/10;
+      if(toimarit>0&&kaupat>0)D.offices[o].toimari_kauppa=Math.round(kaupat/toimarit*1000)/10;
       if(D.office_monthly){
         if(!D.office_monthly[o])D.office_monthly[o]={myynti:Array(12).fill(0),tapaamiset:Array(12).fill(0)};
         D.office_monthly[o].myynti=offAgg[o].mMyynti;
         D.office_monthly[o].tapaamiset=offAgg[o].mTap;
       }
     });
-    // Update cSales chart in-place
+    // Update overview charts in-place
+    const noVuok=o=>o!=='Vuokraus';
     const sc=Chart.getChart(document.getElementById('cSales'));
     if(sc){sc.data.datasets[0].data=OFFICE_ORDER.map(o=>D.offices[o]?D.offices[o].myynti:0);sc.update();}
+    const cc=Chart.getChart(document.getElementById('cConv'));
+    if(cc){
+      cc.data.datasets[0].data=OFFICE_ORDER.filter(noVuok).map(o=>D.offices[o]?D.offices[o].tap_kauppa:0);
+      cc.data.datasets[0].backgroundColor=OFFICE_ORDER.filter(noVuok).map(o=>{const v=D.offices[o]?D.offices[o].tap_kauppa:0;return v>=25?'#16a34a':v>=15?'#D97706':'#DC2626';});
+      cc.update();
+    }
+    const ct=Chart.getChart(document.getElementById('cToimari'));
+    if(ct){
+      ct.data.datasets[0].data=OFFICE_ORDER.filter(noVuok).map(o=>D.offices[o]?D.offices[o].tap_toimari:0);
+      ct.data.datasets[0].backgroundColor=OFFICE_ORDER.filter(noVuok).map(o=>{const v=D.offices[o]?D.offices[o].tap_toimari:0;return v>=55?'#16a34a':v>=40?'#D97706':'#DC2626';});
+      ct.update();
+    }
     // Re-render agents table
     agBuilt=false;
     const agPage=document.getElementById('page-agents');
