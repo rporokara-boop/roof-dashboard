@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roof — Oma Kehityskortti</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0E1E35;--orange:#E8501C;--blue:#1D6FA4;
+  --light:#F5F7FA;--border:#E2E8F0;--text:#0E1E35;--muted:#64748B;
+  --green:#16a34a;--yellow:#D97706;--red:#DC2626;
+  --shadow:0 2px 12px rgba(14,30,53,.08);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;background:var(--light);color:var(--text);font-size:14px}
+
+/* HEADER */
+.hdr{background:var(--navy);height:58px;display:flex;align-items:center;padding:0 28px;gap:16px}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-box{width:30px;height:30px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-box svg{width:16px;height:16px;fill:white}
+.logo-text{color:white;font-size:.95rem;font-weight:800}
+.logo-text span{color:var(--orange)}
+.hdr-sub{color:rgba(255,255,255,.5);font-size:.78rem;border-left:1px solid rgba(255,255,255,.2);padding-left:14px}
+.hdr-sel{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hdr-sel label{color:rgba(255,255,255,.6);font-size:.78rem;white-space:nowrap}
+.ag-select{background:white;color:var(--navy);border:none;border-radius:7px;padding:8px 14px;font-size:.85rem;font-weight:700;min-width:260px;cursor:pointer;outline:none}
+
+/* SHARE BANNER */
+.share-banner{background:var(--orange);color:white;padding:8px 28px;font-size:.78rem;display:flex;align-items:center;gap:12px}
+.share-banner code{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:4px;font-size:.75rem;cursor:pointer;user-select:all}
+.share-banner code:hover{background:rgba(255,255,255,.35)}
+
+/* MAIN */
+.main{padding:22px 28px;max-width:1200px;margin:0 auto}
+
+/* HERO */
+.hero{background:var(--navy);border-radius:var(--r);padding:24px 28px;margin-bottom:18px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--orange));display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;font-weight:900;flex-shrink:0}
+.hero-info h2{color:white;font-size:1.3rem;font-weight:900}
+.hero-team{color:rgba(255,255,255,.6);font-size:.82rem;margin-top:2px}
+.hero-badges{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.hbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+.hbadge.good{background:#dcfce7;color:#166534}
+.hbadge.warn{background:#fef9c3;color:#854d0e}
+.hbadge.bad{background:#fee2e2;color:#991b1b}
+.hero-kpis{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}
+.hkpi{text-align:center;min-width:70px}
+.hkpi-val{font-size:1.5rem;font-weight:900;line-height:1;color:white}
+.hkpi-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.5);margin-top:3px}
+
+/* CARDS */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid21{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:white;border-radius:var(--r);box-shadow:var(--shadow);padding:20px}
+.ctitle{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+
+/* BIG SCORE */
+.big-score{font-size:3.2rem;font-weight:900;line-height:1}
+.score-sub{font-size:.75rem;color:var(--muted);margin-top:6px}
+
+/* BARS */
+.fb-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.fb-label{font-size:.79rem;min-width:128px;font-weight:500}
+.fb-track{flex:1;height:9px;background:var(--border);border-radius:5px;overflow:hidden}
+.fb-fill{height:100%;border-radius:5px}
+.fb-badge{font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:10px;white-space:nowrap}
+.fb-badge.s{background:#dcfce7;color:#166534}
+.fb-badge.w{background:#fef9c3;color:#854d0e}
+.fb-badge.d{background:#fee2e2;color:#991b1b}
+
+/* COMPARE */
+.cmp-row{margin-bottom:14px}
+.cmp-label{font-size:.78rem;font-weight:700;margin-bottom:5px;color:var(--text)}
+.cmp-bars{display:flex;flex-direction:column;gap:4px}
+.cmp-line{display:flex;align-items:center;gap:7px}
+.cmp-bar{height:7px;border-radius:4px;min-width:3px}
+.cmp-val{font-size:.73rem;font-weight:700;white-space:nowrap}
+
+/* TREND */
+.month-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin:10px 0}
+.mbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.mbar{width:100%;border-radius:4px 4px 0 0;background:var(--blue);transition:height .4s}
+.mbar-label{font-size:.65rem;color:var(--muted)}
+.mbar-val{font-size:.68rem;font-weight:700;color:var(--navy)}
+
+/* COMMENTS */
+.comment{background:var(--light);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;padding:9px 13px;margin-bottom:8px;font-size:.8rem;line-height:1.5;color:var(--text);font-style:italic}
+.comment::before{content:'"';font-size:1.1rem;color:var(--orange);font-style:normal}
+
+/* ACTIONS */
+.action{display:flex;gap:9px;padding:9px 12px;border-radius:8px;margin-bottom:7px;align-items:flex-start}
+.action.good{background:#dcfce7}
+.action.improve{background:#fef9c3}
+.action.critical{background:#fee2e2}
+.action-icon{font-size:.95rem;flex-shrink:0;margin-top:1px}
+.action-text{font-size:.79rem;line-height:1.45;font-weight:500}
+.action-text strong{font-weight:800}
+
+/* DONUT */
+.donut-wrap{position:relative;max-width:180px;margin:0 auto}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-center .val{font-size:1.5rem;font-weight:900;color:var(--navy)}
+.donut-center .lbl{font-size:.63rem;color:var(--muted)}
+
+/* NOTA MSG */
+.no-agent{text-align:center;padding:60px 20px}
+.no-agent .icon{font-size:3rem;margin-bottom:14px;display:block}
+.no-agent h3{font-size:1.1rem;font-weight:700;margin-bottom:6px}
+.no-agent p{color:var(--muted);font-size:.88rem}
+
+/* MOBILE */
+@media(max-width:720px){
+  /* Header */
+  .hdr{padding:10px 14px;flex-wrap:wrap;height:auto;gap:8px}
+  .hdr-sub{border-left:none;padding-left:0;font-size:.72rem}
+  .hdr-sel{margin-left:0;width:100%;gap:6px}
+  .hdr-sel label{font-size:.72rem}
+  .ag-select{width:100%;flex:1}
+
+  /* Share banner */
+  .share-banner{padding:8px 14px;flex-wrap:wrap;gap:6px}
+  .share-banner code{word-break:break-all}
+
+  /* Main */
+  .main{padding:12px 14px}
+
+  /* Hero */
+  .hero{flex-direction:column;padding:18px;gap:14px}
+  .hero-info h2{font-size:1.1rem}
+  .hero-kpis{margin-left:0;width:100%;justify-content:space-between}
+  .hkpi-val{font-size:1.3rem}
+  .av{width:52px;height:52px;font-size:1.3rem}
+
+  /* Grids → single column */
+  .grid3{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .grid21{grid-template-columns:1fr}
+
+  /* Cards */
+  .card{padding:15px}
+
+  /* Big score */
+  .big-score{font-size:2.6rem}
+
+  /* Feedback bars label */
+  .fb-label{min-width:100px;font-size:.75rem}
+
+  /* Charts */
+  canvas{max-height:220px!important}
+}
+
+@media(max-width:420px){
+  /* Header — hide subtitle to save space */
+  .hdr-sub{display:none}
+
+  /* Hero KPIs compact */
+  .hkpi{min-width:55px}
+  .hkpi-val{font-size:1.15rem}
+  .hkpi-label{font-size:.58rem}
+
+  /* Big score */
+  .big-score{font-size:2.2rem}
+
+  /* Bar labels shorter */
+  .fb-label{min-width:80px}
+
+  /* Comments text */
+  .comment{font-size:.75rem}
+
+  /* Actions */
+  .action-text{font-size:.75rem}
+
+  canvas{max-height:190px!important}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-box"><svg viewBox="0 0 24 24"><path d="M3 12L12 3l9 9v9H3z"/></svg></div>
+    <div class="logo-text">ROOF <span>|</span></div>
+  </div>
+  <div class="hdr-sub">Oma kehityskortti · YTD 2026</div>
+  <div class="hdr-sel">
+    <label>Välittäjä:</label>
+    <select class="ag-select" id="agSel" onchange="loadAgent()">
+      <option value="">— Valitse välittäjä —</option>
+    </select>
+  </div>
+</div>
+
+<!-- SHARE BANNER -->
+<div class="share-banner" id="shareBanner" style="display:none">
+  🔗 Suora linkki tähän näkymään: <code id="shareUrl" onclick="copyUrl()"></code>
+  <span id="copyMsg" style="font-size:.75rem;opacity:0;transition:opacity .3s">✓ Kopioitu!</span>
+</div>
+
+<div class="main">
+  <!-- NO AGENT -->
+  <div class="no-agent" id="noAgent">
+    <span class="icon">👆</span>
+    <h3>Valitse välittäjä yläpalkista</h3>
+    <p>Näet omat tuloksesi, asiakaspalautteet ja kehitysehdotukset.<br>
+       Jokaisella välittäjällä on oma suora linkki tähän sivuun.</p>
+  </div>
+
+  <!-- AGENT CONTENT -->
+  <div id="agContent" style="display:none">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="av" id="av"></div>
+      <div class="hero-info">
+        <h2 id="hName"></h2>
+        <div class="hero-team" id="hTeam"></div>
+        <div class="hero-badges" id="hBadges"></div>
+      </div>
+      <div class="hero-kpis">
+        <div class="hkpi"><div class="hkpi-val" id="hSales">—</div><div class="hkpi-label">Myynti YTD</div></div>
+        <div class="hkpi"><div class="hkpi-val" id="hMeet">—</div><div class="hkpi-label">Tapaamiset</div></div>
+        <div class="hkpi"><div class="hkpi-val" id="hScore">—</div><div class="hkpi-label">Arvosana</div></div>
+        <div class="hkpi"><div class="hkpi-val" id="hNps">—</div><div class="hkpi-label">NPS</div></div>
+        <div class="hkpi"><div class="hkpi-val" id="hAsked">—</div><div class="hkpi-label">Toimek.%</div></div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Score + Successes + Development -->
+    <div class="grid3">
+      <div class="card">
+        <div class="ctitle">⭐ Asiakasarvosana</div>
+        <div class="big-score" id="bigScore">—</div>
+        <div class="score-sub" id="scoreSub"></div>
+        <div style="margin-top:14px">
+          <canvas id="cScore" height="90"></canvas>
+        </div>
+        <div style="font-size:.78rem;margin-top:10px" id="npsLine"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">🏆 Asiakkaat kehuvat sinua</div>
+        <div id="succBars"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">🎯 Kehityskohteesi</div>
+        <div id="devBars"></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Monthly trend + Comparison -->
+    <div class="grid21">
+      <div class="card">
+        <div class="ctitle">📈 Myyntisi kuukausittain (Tam–Maa)</div>
+        <div class="month-bars" id="monthBars"></div>
+        <canvas id="cMonthLine" height="90" style="margin-top:8px"></canvas>
+      </div>
+      <div class="card">
+        <div class="ctitle">📊 Sinä vs. konserni ka.</div>
+        <div id="cmpContent"></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Actions + Comments + Toimeksianto -->
+    <div class="grid3">
+      <div class="card">
+        <div class="ctitle">💡 Toimenpide-ehdotukset</div>
+        <div id="actions"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">💬 Asiakkaiden kommentit</div>
+        <div id="comments"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">🤝 Toimeksiantoehdottaminen</div>
+        <div class="donut-wrap">
+          <canvas id="cDonut" height="180"></canvas>
+          <div class="donut-center"><div class="val" id="donutVal">—</div><div class="lbl">ehdotti</div></div>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:10px;text-align:center" id="donutNote"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const D = {"agents": {"Heikki Väliaho": {"toimisto": "Oulu", "myynti": 0, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Margareeta Haapajoki": {"toimisto": "Oulu", "myynti": 0, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Lauri Kuusela": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 179482.65, "tapaamiset": 63, "avg_score": 9.5, "nps": 95, "n_feedback": 75, "asked_pct": 89, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": ["Välittäjän asenne", "Asunnon hinta-arvio"], "top_developments": ["Välityspalkkio", "Välittäjän asenne"], "comments": ["Koko konsepti on hienosti mietitty, ylsinkertaisen tehokas ja toimiva. Laurilla on myyvä ote hyvällä tyylillä👍", "Miltei kaikki sujuvaan kaupantekoon tarvittavat elementit olivat Roofin edustajan käynnillä kohdillaan ja huomioitu. Erityisen hyvin kaupanteon palvelukseen vaikuttaa Roofilla olevan valjastettu - uusinta teknonologiaa hyödyntäen - yhteiskunnan seura", "Positiivinen asenne vaikutti olevan. ", "Onnistumiset: Arviokäynnille oli varattu riittävästi aikaa ja neuvottelut johtivat toimeksiantoon asti samalla käynnillä. \nEi tule mieleen kehittämiskohteita. "], "myynti_monthly": [38593, 63817, 77072, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [22, 20, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Santeri Carlsson": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 97757.51, "tapaamiset": 45, "avg_score": 9.5, "nps": 94, "n_feedback": 36, "asked_pct": 72, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": [], "top_developments": ["Valmistautuminen", "Ammattitaito"], "comments": ["Tapaaminen oli kaikin puolin onnistunut. Santeri on ihmisenä tosi kiva. ", "Moimoimooimoimoim", "Innostunut asenne, esitteiden sisältö ja visuaalisuus, ammattitaidon korkea taso ja asiakkaan mielipteen huomioon ottaminen.", "Tähän ei ole vielä mielipidettä. Tapaamisen vaikutelma ja uskottavuus oli hyvä."], "myynti_monthly": [24184, 31172, 42401, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 11, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tiimi": {"toimisto": "Raasepori", "myynti": 95691.62, "tapaamiset": 64, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [45181, 25972, 24539, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [24, 20, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Stefan von Harpe": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 94826.59, "tapaamiset": 29, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [5064, 26837, 5954, 56972, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 4, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Miko Rikala": {"toimisto": "Helsinki / Miko", "myynti": 91905.18, "tapaamiset": 33, "avg_score": 9.4, "nps": 89, "n_feedback": 45, "asked_pct": 98, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio", "Välityspalkkio", "Sisällön selkeys"], "comments": ["Tosi hyvä taktiikka,ei tullut yhtään tuputusfiilis,kuunneltiin asiakasta hyvin👍", "Roofin konseptin esittely oli hyvä ja vakuuttava, itseeni vetosi tutkittuun tietoon perustuva toimintamalli. Hienoa että hinta-arvio sekä kustannukset avattiin jo käynnin aikana, välittäjä oli selvästi tutustunut alueeseen ja pystyi näin tekemään ehd", "Ystävällinen, asiallinen, kiireetön, ammattimainen ja erittäin miellyttävä palvelu! ", "Kokonaisuus, valmistautunut välittäjä ja prosessin taustoittaminen/perustelu erotti Roofin selvästi muista meillä käyneistä. "], "myynti_monthly": [48215, 0, 43690, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 13, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Can Zhang": {"toimisto": "Hyvinkää", "myynti": 72447.48, "tapaamiset": 56, "avg_score": 10.0, "nps": 100, "n_feedback": 6, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": ["Aikataulu piti paikkansa ,rentoa keskustelua samoin faktat ilmeni kertoen myyntitilanteesta tässä hetkessä", "Mieletön ammattitaito ja asiakkaan kohtaamisentaito!"], "myynti_monthly": [41069, 24606, 6773, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Lauri Lotvonen": {"toimisto": "Oulu", "myynti": 71244.0, "tapaamiset": 37, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7375, 14229, 49640, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mikko Anttikoski": {"toimisto": "Tampere", "myynti": 68653.59, "tapaamiset": 34, "avg_score": 9.1, "nps": 85, "n_feedback": 34, "asked_pct": 85, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": ["Valmistautuminen"], "top_developments": ["Välittäjän asenne", "Välityspalkkio", "Sisällön selkeys"], "comments": ["En tällä hetkellä osaa vastata tähän kysymykseen.", "Mielestäni käynti oli täysin onnistunut, en viitsi keksimällä keksiä valitettavaa.", "Todella liian ylimielinen välittäjä, toi vain itseänsä esiin, ei ottanut huomioon tilannettamme. ", "Kaikki selkeästi ja ammattimaisesti hyvin. "], "myynti_monthly": [11781, 16084, 40789, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sari Uusitalo": {"toimisto": "Tampere", "myynti": 61456.35, "tapaamiset": 38, "avg_score": 9.2, "nps": 83, "n_feedback": 42, "asked_pct": 88, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Ystävällisyys"], "top_failures": [], "top_developments": ["Välityspalkkio", "Valmistautuminen", "Sisällön selkeys"], "comments": ["Kaikki sujui sopimusta tehdessä täydellisesti. Huikeaa 👍", "Välittäjä oli ystävällinen ja mielestämme rehellinen myynnin ja arvioinnin suhteen ja muutenkin tosi mukavan tuntuinen", "Asunnon myynti on etenemistä asia kerrallaan. Merkityksellinen tapahtuma, välittäjän tuki ja yhteistyö vie myyntipäätlstä eteenpäin.", "Arviokäynti minusta erittäin hyvä kokonaisuus, selkeä ja asiallinen."], "myynti_monthly": [21623, 15697, 24136, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [8, 14, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mira Järvinen": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 58897.81, "tapaamiset": 28, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7171, 32093, 19633, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Saara Kokko": {"toimisto": "Vuokraus", "myynti": 54304.36, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [18286, 15971, 20048, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Taru Tuukkanen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 54210.35, "tapaamiset": 24, "avg_score": 9.4, "nps": 94, "n_feedback": 33, "asked_pct": 97, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": [], "top_developments": ["Välityspalkkio", "Sisällön selkeys"], "comments": ["Mukavaa palvelua ja selkeä konsepti. ", "Ei tässä vaiheessa komentoitava.", "Arvostan erityisesti rehellistä arviota tilanteesta", "Käynnistä jäi hyvin positiivinen kuva. Palaan asiaan kun myynti tulee ajankohtaiseksi. Olen hyvin tyytyväinen tilanteeseen."], "myynti_monthly": [4143, 12892, 37174, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Joel Vehkalahti": {"toimisto": "Oulu", "myynti": 53076.0, "tapaamiset": 23, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Asunnon hinta-arvio"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [13410, 33070, 6596, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jaakko Simola": {"toimisto": "Tampere", "myynti": 51438.26, "tapaamiset": 46, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [6876, 20837, 23725, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 6, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Karri Rytilahti": {"toimisto": "Oulu", "myynti": 51308.0, "tapaamiset": 20, "avg_score": 10.0, "nps": 100, "n_feedback": 1, "asked_pct": 0, "top_successes": ["Ystävällisyys", "Välityspalkkio", "Asunnon hinta-arvio"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [9463, 34777, 7068, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Marie Ahola": {"toimisto": "Tampere", "myynti": 51290.62, "tapaamiset": 41, "avg_score": 9.4, "nps": 91, "n_feedback": 53, "asked_pct": 81, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": ["Ammattitaito", "Asunnon hinta-arvio", "Sisällön selkeys"], "comments": ["Hyvä kokonaisuus ", "Eipä Taira olla paljon tehtävissä...?", "Tässä kilpaillaan naisen ja miehen arvojen välillä. ", "Vastuksissa, läsnäolossa, tiedoissakaan näin maallikosta ei tuntunut olevan heikkouksia, vastaus selkeä kun osaa kysyä. Homma hanskassa. - Ehkä vakuuttelu osaamista ja tekemistä uskotaan vähemmällä eikä välttämättä tarvitse asiaan useasti palata, ymm"], "myynti_monthly": [6777, 23406, 21108, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 12, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Laura Lyttinen": {"toimisto": "Oulu", "myynti": 47038.0, "tapaamiset": 22, "avg_score": 10.0, "nps": 100, "n_feedback": 3, "asked_pct": 67, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": [], "comments": ["Markkinointimateriaali /prosessi laadukas.  Ammattitaitoinen myyjä! "], "myynti_monthly": [6574, 13010, 27454, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Maarit Nissilä": {"toimisto": "Oulu", "myynti": 46537.0, "tapaamiset": 33, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [13999, 21325, 11213, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Petri Kajaan": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 44709.94, "tapaamiset": 40, "avg_score": 9.3, "nps": 92, "n_feedback": 13, "asked_pct": 85, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio"], "comments": ["Realistinen käsitys markkinatilanteesta ja asunnon myyntimahdollisuudesta sekä hintaan vaikuttavista tekijöistä vastasivat pitkälle omaa käsitystä.", "Kaikki muu oli kohdillaan, mutta kuvien stailaus olisi hyvä lisä", "Ystävällinen ja asiallinen välittöjä. Ymmärsi, että kyseessä ei ole välitön myyntitoimeksianto vaan lähinnä kartoitus tulevaisuutta varten.", "Ystävällinen ja asiallinen välittäjä, kiitos."], "myynti_monthly": [5922, 8559, 30229, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Helin Ranne": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 44442.23, "tapaamiset": 36, "avg_score": 9.5, "nps": 94, "n_feedback": 35, "asked_pct": 80, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": ["Ammattitaito", "Valmistautuminen"], "comments": ["Asiat on hoidettu ammattitaidolla ja ripeästi.", "Todella ystävällinen ja erittäin ammattitaitoinen kohtaaminen. Asunnon arvionti sujui hyvässä yhteishengessä. Hyvät perustelut hinta-arviolle.", "Ensitapaaminen oli todella miellyttävä", "Selkeys , lähestymistapa"], "myynti_monthly": [24123, 16335, 3984, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 16, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Amir Ahmad": {"toimisto": "Vuokraus", "myynti": 42308.69, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [12342, 13188, 16779, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mari Jokelainen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 40922.7, "tapaamiset": 26, "avg_score": 8.8, "nps": 71, "n_feedback": 17, "asked_pct": 94, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Välittäjän asenne", "Ammattitaito", "Valmistautuminen"], "top_developments": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "comments": ["Miellyttävä käynti", "Hyvin sujui👍👌Jatkakaa samaan malliin🥂", "Selkeä myyntisuunnitelma. Hyvin perusteltu myyntihinnan arvio. Kohtuullinen välityspalkkio.", "Moderni ja tehokkaan oloinen myyntikonsepti"], "myynti_monthly": [0, 20461, 20461, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 7, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kari Karlsten": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 39778.11, "tapaamiset": 23, "avg_score": 10.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3327, 10649, 25802, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Valtteri Parikka": {"toimisto": "Järvenpää", "myynti": 39417.62, "tapaamiset": 34, "avg_score": 9.8, "nps": 100, "n_feedback": 9, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Valmistautuminen", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 7444, 31974, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Taneli Ollila": {"toimisto": "Oulu", "myynti": 37795.0, "tapaamiset": 35, "avg_score": 9.0, "nps": 100, "n_feedback": 3, "asked_pct": 100, "top_successes": ["Ammattitaito", "Valmistautuminen", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7436, 27347, 3012, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sari Rossi": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 37443.05, "tapaamiset": 34, "avg_score": 9.8, "nps": 100, "n_feedback": 12, "asked_pct": 67, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Stailauksen esittely oli+", "Mahtava ystävällinen ja ihmisläheinen asenne välittäjällä.", "Plussaa ainakin selkeys, realistinen näkemys markkinasta, asiantuntemus. Ja mukava ihminen :)", "Välittäjä toi esiin raikkaan näkemyksen muiden samalla alueella toimivien välittäjien tarjousten rinnalla."], "myynti_monthly": [8535, 4223, 24684, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [8, 7, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tomi Huusari": {"toimisto": "Kymenlaakso", "myynti": 35587.57, "tapaamiset": 23, "avg_score": 9.7, "nps": 98, "n_feedback": 54, "asked_pct": 80, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Ystävällisyys"], "top_failures": [], "top_developments": ["Sisällön selkeys"], "comments": ["Todella ammattimainen ja luottamusta herättävä välittäjä. ", "Ei tule oikein mitään uutta mieleen, teidän konsepti toimii hyvin.", "Kaikki tarpeellinen käytiin läpi, ei jäänyt epäselvyyttä mistään.", "Sujuvaa, asiallista, selkeäö"], "myynti_monthly": [6109, 17909, 11570, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [10, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Ildiko Katona-Hiekkanen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 33386.46, "tapaamiset": 43, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 14000, 19386, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [19, 11, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sari Välimaa": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 32902.78, "tapaamiset": 27, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [13873, 15365, 3665, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Heidi Niemi": {"toimisto": "Kymenlaakso", "myynti": 31964.54, "tapaamiset": 26, "avg_score": 8.8, "nps": 69, "n_feedback": 26, "asked_pct": 100, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Sisällön selkeys"], "top_failures": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_developments": ["Välityspalkkio", "Asunnon hinta-arvio", "Ystävällisyys"], "comments": ["Asiallinen arvio välittäjältä asunnosta. Välittäjä tuntui tehokkaalta. Toivotaan niin.", "Nopeaa toimintaa ja vahva usko että päästään yhdessä eteenpäin!", "Asiakaspalvelu oli priimaa ja välittäjä osasi selittää kaiken niin että ymmärsin asiat", "Välittäjä oli todella ammattitaitoinen kaikin puolin. Harkitsen silti asunnon myyntiä itse. "], "myynti_monthly": [13813, 6056, 12096, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Juhani Hirvonen": {"toimisto": "Oulu", "myynti": 30963.0, "tapaamiset": 11, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [10701, 14590, 5672, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Harto Pasonen": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 30863.73, "tapaamiset": 42, "avg_score": 9.1, "nps": 79, "n_feedback": 29, "asked_pct": 93, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Välityspalkkio", "Sisällön selkeys", "Välittäjän asenne"], "comments": ["Selkeitä selityksiä ja vastauksia aika hyvä", "Roof yrityksenä, oli erittäin hyvä.", "Pyörittiin liiaksi yleisissä asioissa", "Voisitte sisällyttää palvelutarjontaanne facebook - ja instagram-markkinointia. Käytätte tässä Etuoven palvelua, mutta näitä voisi tehdä aika helposti itsekin tai ostaa alihankintana joltain some-markkinointia tekevältä.\n"], "myynti_monthly": [12014, 11041, 7809, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 12, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sami Pelkonen": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 30729.0, "tapaamiset": 35, "avg_score": 9.2, "nps": 84, "n_feedback": 19, "asked_pct": 95, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Ystävällisyys"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio", "Välityspalkkio"], "comments": ["Peristeellinen mahdollisen myyntitoimeksiannon läpikäynti.", "Ehkä jo hieman liikaa postia Roofilta", "Nopea yhteydenotto ja välittäjä valmistautunut tapaamiseen", "Välittäjä oli ammattitaitoinen ja hänen hintaarvio oli ihan hyvä ja realistinen\n"], "myynti_monthly": [3595, 12646, 15764, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [14, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jaana Huurinainen": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 30549.32, "tapaamiset": 12, "avg_score": 9.5, "nps": 96, "n_feedback": 26, "asked_pct": 85, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": ["Välityspalkkio"], "comments": ["Oli hyvä, että otettiin pian yhteyttä kun pyysin välityspalkkio vertailua netin kautta.Välittäjällä oli hyvä asiantuntevuus ja paneutuneisuus asuntomarkkinoihin laajasti. Kiitokset hänelle käynnistä. Mielestäni asuntoesitteen kansikuvaa ja taustaväri", "Jaanasta tuli positiivinen fiilis :-)", "Hinta voisi olla jollain tavoin näkyvissä teidän kotisivuilla. Yllätyin positiivisesti, kun se olikin edullisempi kuin muutamalla kilpailijalla, mutta tätä en voinut tietää ennen kun juttelin välittäjäne kanssa.", "Jaana oli oikein miellyttävä ja asiantunteva välittäjä :-). Minulla kävi toisenkin firman edustaja katsomassa asuntoani ja valitsin hänet välittäjäksi pitkälti siksi, että hän asuu alueella ja tuntee sen hyvät ja vähemmän hyvät puolet \"kuin omat task"], "myynti_monthly": [14267, 8713, 7569, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Arja Alakopsa": {"toimisto": "Oulu", "myynti": 29961.0, "tapaamiset": 17, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7667, 6104, 16190, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mikko Mäkelä": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 29601.56, "tapaamiset": 26, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [6490, 3626, 8486, 11000, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 13, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tuomas Maksimainen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 28705.96, "tapaamiset": 39, "avg_score": 9.2, "nps": 100, "n_feedback": 5, "asked_pct": 100, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Hyvä realistinen tilannearvio."], "myynti_monthly": [8526, 20180, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jukka-Pekka Halunen": {"toimisto": "Oulu", "myynti": 28105.0, "tapaamiset": 49, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7492, 11402, 9211, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Janne Halunen": {"toimisto": "Oulu", "myynti": 27593.0, "tapaamiset": 17, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": [], "comments": ["Kaikki oli hyvin selkeää, kiitos"], "myynti_monthly": [0, 17234, 10359, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [10, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Marie Karukoski": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 27485.35, "tapaamiset": 45, "avg_score": 9.7, "nps": 100, "n_feedback": 26, "asked_pct": 100, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Kaikin puolin aivan ihana ja vaikutti myös hyvin ammattitaitoiselta välittäjältä.", "Teillä on paras välittäjä ikinä", "Lähes kympin suoritus. Jos lähdemme myymään, valitsemme tämän välittäjän eli Marie Karukosken.", "Prosessi lähti nopeasti ja innolla käyntiin. Arvionkäynnin ajanvarauksessa oli pientä hämmennystä, minulle oli varattu aika yhden välittäjän kanssa (en tiennyt nimeä), ja toinen välittäjä otti yhteyttä sopiakseen ajan hänen kanssaan. Sekaannus selvis"], "myynti_monthly": [2582, 2462, 22441, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [8, 19, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Marju Jänkälä": {"toimisto": "Hyvinkää", "myynti": 27467.85, "tapaamiset": 30, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [4940, 11434, 11093, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 13, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Martti Jaakko": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 27287.59, "tapaamiset": 25, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [7530, 6735, 13023, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Alex Salo": {"toimisto": "Pori", "myynti": 26539.85, "tapaamiset": 28, "avg_score": 9.6, "nps": 89, "n_feedback": 18, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": ["Välityspalkkio", "Asunnon hinta-arvio", "Sisällön selkeys"], "comments": ["Ammattimainen ote, hyvä taustaselvitys ja inhimillinen lähestymistapa. Vahva osaaminen lämmitti mieltä ja tuli olo, että on osaavissa käsissä. ", "Kaikki meni odotetusti", "Ammattitaito sisältäen markkinoinnin ..", "Onnistuminen: Nopea ja selkeä tapa asioida. Pidän tästä tyylistä. "], "myynti_monthly": [7815, 11554, 7171, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Katja Wilhola": {"toimisto": "Pori", "myynti": 24940.23, "tapaamiset": 29, "avg_score": 10.0, "nps": 100, "n_feedback": 2, "asked_pct": 50, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Sisällön selkeys"], "top_failures": [], "top_developments": [], "comments": ["Kattava selvitys asioista. "], "myynti_monthly": [4781, 4382, 15777, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jenni Polizzi": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 24834.1, "tapaamiset": 11, "avg_score": 8.7, "nps": 70, "n_feedback": 10, "asked_pct": 80, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_developments": ["Välityspalkkio", "Asunnon hinta-arvio"], "comments": ["Oikein asiantuntevat ja ammattilaiset välittäjät. Brändi-ilmeenne on myös todella kiva!", "Thanks , it was good seeing the apartment and very well\nExplained by Jenni !", "Välittäjä sairastui ja ilmeisesti unohti jatkotoimenpiteet. Joten emme voi arvioida käyntiä.", "Ystävällinen ja ammattitaitoinen myyntineuvottelija. Kiitos Jenni"], "myynti_monthly": [0, 24834, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [3, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Eddi Holmberg": {"toimisto": "Raasepori", "myynti": 23815.0, "tapaamiset": 16, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [12995, 10200, 620, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Miikka Heikkala": {"toimisto": "Oulu", "myynti": 23810.0, "tapaamiset": 31, "avg_score": 7.5, "nps": 50, "n_feedback": 4, "asked_pct": 75, "top_successes": ["Ystävällisyys", "Ammattitaito", "Asunnon hinta-arvio"], "top_failures": ["Välittäjän asenne", "Asunnon hinta-arvio"], "top_developments": [], "comments": [], "myynti_monthly": [12395, 0, 11415, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [16, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tommi Kujala": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 23175.54, "tapaamiset": 40, "avg_score": 9.5, "nps": 90, "n_feedback": 10, "asked_pct": 80, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Ystävällisyys", "Valmistautuminen", "Välittäjän asenne"], "comments": ["Hyvä tspaamisen kokonaisuus"], "myynti_monthly": [7378, 8226, 7572, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 13, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Niko Rauhamaa": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 21271.72, "tapaamiset": 20, "avg_score": 9.8, "nps": 100, "n_feedback": 8, "asked_pct": 88, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Sisällön selkeys"], "top_failures": [], "top_developments": [], "comments": ["Tapaamisesta jäi positiivinen ja hyvä vaikutelma", "Tapaaminen Nikon kanssa oli erittäin onnistunut (toimeksianto tehty)! Hän on miellyttävä, asiantunteva ja luo luottamusta.", "Selkeä kokonaisuus kaikki kertaan.", "Ei ahdotettavaa, hyvin menee näinkin."], "myynti_monthly": [7477, 0, 10273, 3522, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mikko Lehtonen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 20568.12, "tapaamiset": 31, "avg_score": 9.5, "nps": 100, "n_feedback": 13, "asked_pct": 92, "top_successes": ["Ammattitaito", "Valmistautuminen", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": ["Välittäjä tuntui luotettavalta ja ammattitaitoiselta. En löytänyt mitään kehitettävää!"], "myynti_monthly": [9215, 11353, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 9, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Janette Rautakoski": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 19940.24, "tapaamiset": 19, "avg_score": 9.5, "nps": 100, "n_feedback": 2, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": [], "comments": ["Kaikki täydellisesti, kiitos."], "myynti_monthly": [6135, 5040, 8765, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Merveil Bivu": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 19356.18, "tapaamiset": 46, "avg_score": 9.4, "nps": 84, "n_feedback": 25, "asked_pct": 88, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio", "Ammattitaito", "Valmistautuminen"], "comments": ["Välittäjä ystävällinen,mukava mies", "Oli täydellinen paketti asunnon myyntiin. En keksi mitään kehitettävää.", "Kaikki ihan hyvä. Ollaan yhteydessä kiinteistövälittäjän kanssa.", "Ei ainakaan vielä ole aihetta valittaa. "], "myynti_monthly": [10164, 6802, 2390, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Teo Schukov": {"toimisto": "Järvenpää", "myynti": 18836.67, "tapaamiset": 24, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 4382, 14454, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Juhani Ketonen": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 18580.34, "tapaamiset": 29, "avg_score": 8.6, "nps": 60, "n_feedback": 5, "asked_pct": 80, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": ["Välittäjän asenne", "Välityspalkkio"], "comments": ["Hinta arvio ja provisio on hyvä.\nHenkilökemia ei oikein kohdannut tällä kertaa."], "myynti_monthly": [0, 11250, 7331, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Matti Lehtelä": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 18160.75, "tapaamiset": 17, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3825, 4972, 9364, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Anne-Maria Hirviniemi": {"toimisto": "Tampere", "myynti": 16812.51, "tapaamiset": 7, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3984, 7888, 4940, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Asta Leskinen": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 16286.06, "tapaamiset": 19, "avg_score": 9.5, "nps": 94, "n_feedback": 16, "asked_pct": 94, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio"], "comments": ["Astan ystävällisyys ja ammattitaito sekä selkeä info asioiden etenemisen suhteen.", "Asiantuntevaa ja ystävällistä palvelua. Helppo puhua asioista.", "Lämmin ja ystävällinen välittäjä. ", "Keskustelussa ja Roofin esittelyssä sekä hinta-arviossa"], "myynti_monthly": [5250, 11036, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [3, 11, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Irja Seppälä": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 16254.98, "tapaamiset": 26, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 4143, 12112, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 8, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kari Turunen": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 16117.13, "tapaamiset": 10, "avg_score": 9.0, "nps": 83, "n_feedback": 23, "asked_pct": 87, "top_successes": ["Valmistautuminen", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Valmistautuminen", "Välittäjän asenne"], "top_developments": ["Välityspalkkio", "Asunnon hinta-arvio"], "comments": ["Välitypalkkio mallia korreloiden asunnon myyntihintaan voisi kehittää.\nSiten että palkkion muutos motivoi oikeasti välittäjiä saamaan kohteesta parhaan hinnan", "Myyntistrategia kuulosti erittäin hyvältä", "Homma toimii ja erittäin hyvältä vaikuttaa..", "Ystävällinen, asiantunteva palvelu . Ennakkovalmistelut todella erinomaiset."], "myynti_monthly": [6044, 10073, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Stefano Ramirez": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 15935.92, "tapaamiset": 36, "avg_score": 7.7, "nps": 48, "n_feedback": 148, "asked_pct": 73, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Välittäjän asenne", "Valmistautuminen", "Ammattitaito"], "top_developments": ["Valmistautuminen", "Sisällön selkeys", "Asunnon hinta-arvio"], "comments": ["Toivottavaa olisi saada ennen tätä kyselyä kirjallisesti tarjous välityksestä.  Odotan innolla tätä!", "Ystävällinen ja asiallinen palvelu.", "Selkeä kuvaus myynti prosessista ja suorat vastaukset kysymyksiin.", "Välittäjä oli asiantunteva, luotettava ja miellyttävä. Tähän tilanteeseen juuri sopiva."], "myynti_monthly": [0, 4781, 11155, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Juha Lehtonen": {"toimisto": "Salo", "myynti": 15874.94, "tapaamiset": 72, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [8375, 3750, 3750, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [14, 28, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Axel Dressell": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 15789.25, "tapaamiset": 24, "avg_score": 8.6, "nps": 76, "n_feedback": 21, "asked_pct": 81, "top_successes": ["Sisällön selkeys", "Ammattitaito", "Ystävällisyys"], "top_failures": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_developments": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "comments": ["Palvelu oli nopeaa, ystävällistä ja asiantuntevaa.\nAsiaa pitää kuitenkin vielä miettiä,  ja keskustella pankin kanssa. ", "Nopea ja erittäin ystävällinen palvelu.\n\nKiinteistönvälittäjän tarjous voisi olla mielestäni voimassa pidempään. Asunnonvaihtoasioissa ei kannata kiirehtiä, vaan nämä asiat vaativat suunnittelua ja harkintaa.", "Erittäin hyvää palvelua! 👍", "Liikaa tyrkytitte ,olkaa oma itsenne ,suorastaan oli ällöä! Ja sunnuntaina soittaa ,,kuulemma pari asiaa ,  miksi ja mikä niin tärkeätä että pitää sunnuntaina soittaa vaikka jo sovittu käynti? En ymmärrä"], "myynti_monthly": [1765, 7570, 6454, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 11, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kimmo Antikainen": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 15730.68, "tapaamiset": 13, "avg_score": 8.5, "nps": 70, "n_feedback": 10, "asked_pct": 90, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Asunnon hinta-arvio"], "top_failures": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_developments": ["Asunnon hinta-arvio"], "comments": ["Ammattitaito näkyi käynnillä. Ystävällinen. Perusteli puheet miksi on jotain mieltä.", "Kannattaisi valita tapaamiseen välittäjä, joka tuntee tai on etukäteen perehtynyt alueeseen ja kohteeseen sekä jolla näkemystä ja asenne  kohdallaan. Imurikauppias-mentaliteetilla ei vakuuttanut.", "Kimmo oli todella mukava ja asiantunteva myyjä"], "myynti_monthly": [7363, 4869, 3500, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jermu Lampinen": {"toimisto": "Kymenlaakso", "myynti": 15456.26, "tapaamiset": 12, "avg_score": 9.4, "nps": 90, "n_feedback": 10, "asked_pct": 50, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": ["Välityspalkkio"], "comments": ["Vielä aloitteleva välittäjä mutta siintä huolimatta asiansa osaava :)", "Kaikki hyvin,  mutta vasta marraaskuun 24 alusta tulee 2v täyteen,  jolloin voin myydä", "Faktat huomioitu monipuolisesti eli esim. hinta-arvion perustelut.", "Arvostus asiakasta kohtaan näkyi kaikessa toiminnassa. Raha on rahaa, mutta kunnioitus ja hyvät tavat ovat jotain  mitä rahalla ei saa. Selkeä esittely ja järjestelykyky olivat parhainta asiakaspalvelua. Nämä ominaisuudet asiakaskäynnissä toteutuivat"], "myynti_monthly": [5488, 7745, 2223, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [3, 1, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Oili Rosti-Räty": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 15386.46, "tapaamiset": 30, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 1594, 13793, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [11, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Pauliina Alatarvas": {"toimisto": "Oulu", "myynti": 15260.0, "tapaamiset": 29, "avg_score": 9.2, "nps": 80, "n_feedback": 5, "asked_pct": 60, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Välityspalkkio"], "comments": [], "myynti_monthly": [0, 11232, 4028, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [12, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Senja Nukarinen": {"toimisto": "Hyvinkää", "myynti": 15179.27, "tapaamiset": 16, "avg_score": 9.5, "nps": 90, "n_feedback": 10, "asked_pct": 40, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": ["Välityspalkkio"], "comments": ["Asiantuntevuudessa ja ystävällisyydestä. ", "Välittäjällä on hyvä ammattitaito"], "myynti_monthly": [7968, 2789, 4422, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [1, 10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Terhi Marjakangas": {"toimisto": "Oulu", "myynti": 15077.0, "tapaamiset": 13, "avg_score": 9.0, "nps": 60, "n_feedback": 5, "asked_pct": 60, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Välityspalkkio", "Asunnon hinta-arvio"], "comments": [], "myynti_monthly": [5512, 359, 9206, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Eija Kanninen-Ikonen": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 14874.7, "tapaamiset": 17, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [1823, 0, 13052, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kaisa Lehtonen": {"toimisto": "Salo", "myynti": 14315.81, "tapaamiset": 41, "avg_score": 8.5, "nps": 50, "n_feedback": 4, "asked_pct": 75, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Välityspalkkio"], "comments": [], "myynti_monthly": [1195, 7543, 5578, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [13, 7, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "John Navarro": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 14103.58, "tapaamiset": 38, "avg_score": 8.0, "nps": 50, "n_feedback": 6, "asked_pct": 67, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Valmistautuminen"], "top_developments": ["Asunnon hinta-arvio"], "comments": ["Edellämainitut asiat.", "Emme tavanneet välittäjää, aikatauluihin tuli muutoksia välittäjän toimesta\n\n", "Nopea yhteydenotto iso plussa👍", "Myyjä oli todella helposti lähestyttävissä. Hänestä huomasi että hän myy ammatiksi mutta hänestä ei tullut lipevää kuvaa."], "myynti_monthly": [2390, 2789, 5737, 3187, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 13, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Ari Patama": {"toimisto": "Turku", "myynti": 13810.35, "tapaamiset": 36, "avg_score": 9.3, "nps": 100, "n_feedback": 3, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3347, 10464, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 7, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tomi Rinne": {"toimisto": "Tampere", "myynti": 12629.48, "tapaamiset": 9, "avg_score": 8.2, "nps": 56, "n_feedback": 9, "asked_pct": 89, "top_successes": ["Ystävällisyys", "Ammattitaito", "Asunnon hinta-arvio"], "top_failures": ["Ammattitaito", "Asunnon hinta-arvio"], "top_developments": ["Välityspalkkio"], "comments": ["Koiran rapsutuksessa onnistui ", "Aloitimme yhteistyön ja myyntistrategian kehittämisen ja hintahaarukoinnin hyvin. Meneillään oleva julkisivuremontti seinänvaihtoineen tuo haastetta noin kuukauden. Tämä asunto valmistunee viikossa. Jatketaan... 😁👍"], "myynti_monthly": [9442, 3187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Duarte Tammilehto": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 12075.85, "tapaamiset": 33, "avg_score": 9.4, "nps": 84, "n_feedback": 38, "asked_pct": 84, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": ["Ammattitaito"], "top_developments": ["Ystävällisyys", "Valmistautuminen", "Välittäjän asenne"], "comments": ["Kiitettävä yhteydenpito, vaivaton kommunikointi ja aidosti läsnä, toimiva vuorovaikutus.\n", "Asiallinen keskustelu", "Arviointi käynnistä jäi erittäin hyvä tunne (fiilis), se auttaa valinnassa varmasti. ", "Sopimuksen sisällön esittely oli puutteellista enkä ole saanut esim. sähköpostia, jossa se esiteltäisiin."], "myynti_monthly": [2789, 4750, 4537, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 11, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Janne Parhiala": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 11251.29, "tapaamiset": 4, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 2094, 9157, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Roni Haarakangas": {"toimisto": "Hyvinkää", "myynti": 10729.08, "tapaamiset": 22, "avg_score": 9.3, "nps": 87, "n_feedback": 15, "asked_pct": 87, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Ystävällisyys"], "top_failures": [], "top_developments": ["Asunnon hinta-arvio", "Välittäjän asenne", "Välityspalkkio"], "comments": ["Välittäjän asenne oli ihan erilainen, mitä olen tottunut kohtaamaan. Siis positiivinen kokemus", "Asiallinen ja asiantunteva sekä kuunteleva tapaaminen.", "Välittäjästä jäi positiivinen kuva myös ammattitaidon puolesta", "Myyjä teki luetettavan, rauhallisen ja asiantuntevan vaikutuksen.Kiitos."], "myynti_monthly": [0, 10729, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Miia Piitulainen": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 10224.7, "tapaamiset": 26, "avg_score": 9.5, "nps": 100, "n_feedback": 8, "asked_pct": 62, "top_successes": ["Ammattitaito", "Ystävällisyys", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": ["Realistinen hinta asunnosta ja ystävällisyys. Annatte asiakkaan rauhassa miettiä asunnon myyntiä. Ei valittamista. Kaikki sujui hyvin. "], "myynti_monthly": [0, 7088, 3136, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 9, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Anastasia Meija": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 10071.72, "tapaamiset": 16, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 10072, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 8, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Laura Rantala": {"toimisto": "Pori", "myynti": 9561.75, "tapaamiset": 32, "avg_score": 9.5, "nps": 100, "n_feedback": 10, "asked_pct": 90, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Hyvät vinkit, myynti stailaukseen, yms", "Oli kyllä hyvä tapaaminen. Selkeää, kokonaisvaltaista ja rauhallista, ei kiireen tuntua, kiitos 🌹"], "myynti_monthly": [0, 1992, 7570, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kirsi Apajalahti-Plym": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 9003.73, "tapaamiset": 11, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3187, 5817, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Panu Paanila": {"toimisto": "Tampere", "myynti": 8924.31, "tapaamiset": 29, "avg_score": 9.1, "nps": 85, "n_feedback": 13, "asked_pct": 85, "top_successes": ["Ammattitaito", "Sisällön selkeys", "Asunnon hinta-arvio"], "top_failures": [], "top_developments": ["Välityspalkkio", "Ystävällisyys", "Ammattitaito"], "comments": ["Oli todella hyvä tapaaminen,ja tietysti hinta arvio oli hyvä!!", "Välittäjä oli rauhallinen, ystävällinen ja kuunteleva.", "Välittäjä oli selvästi kokenut ammattilainen.\nJa erityisesti arvostan hänen rehellisyyttään kertoa asiakkaalle epämiellyttävä totuus asunnon hinnasta."], "myynti_monthly": [0, 3028, 5896, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kirsi Aarikka": {"toimisto": "Salo", "myynti": 8589.65, "tapaamiset": 7, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 8590, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Anna-Lotte Riuhu": {"toimisto": "Turku", "myynti": 8581.67, "tapaamiset": 7, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3028, 5554, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tytti Löppönen": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 8491.37, "tapaamiset": 6, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [621, 0, 7870, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tomi Haltia": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 7279.29, "tapaamiset": 36, "avg_score": 9.5, "nps": 91, "n_feedback": 11, "asked_pct": 91, "top_successes": ["Välittäjän asenne", "Valmistautuminen", "Ammattitaito"], "top_failures": [], "top_developments": ["Ystävällisyys", "Ammattitaito", "Valmistautuminen"], "comments": ["Asenne oli kohdallaan mutta ehkä ajankohta ei ole sopiva realistisen hinta-tason muodostumiselle."], "myynti_monthly": [3538, 398, 3343, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [14, 15, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Laura Ruuska": {"toimisto": "Kymenlaakso", "myynti": 6742.63, "tapaamiset": 11, "avg_score": 5.0, "nps": 0, "n_feedback": 2, "asked_pct": 50, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": ["Valmistautuminen"], "top_developments": [], "comments": ["Välittäjä ei saapunut paikalle ollenkaan. Soitin kysyäkseni saapumisesta, kun hän oli sovitusta tapaamisesta myöhässä. Hän vastasi ja pahoitteli sotkeneensa kohteet, eikä tiedetty tästä mitään ennen kuin otin yhteyttä."], "myynti_monthly": [0, 0, 6743, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [3, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Ulla Rosendahl": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 6215.14, "tapaamiset": 5, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [6215, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Heini Mattila": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 6143.02, "tapaamiset": 18, "avg_score": 9.8, "nps": 100, "n_feedback": 5, "asked_pct": 80, "top_successes": ["Välittäjän asenne", "Ystävällisyys", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 2909, 3234, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Outi Malmlund": {"toimisto": "Helsinki / Ronin Tiimi", "myynti": 6103.59, "tapaamiset": 24, "avg_score": 9.8, "nps": 100, "n_feedback": 14, "asked_pct": 93, "top_successes": ["Ammattitaito", "Välittäjän asenne", "Ystävällisyys"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [1721, 0, 4382, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Lena Flinck": {"toimisto": "Raasepori", "myynti": 6000.0, "tapaamiset": 14, "avg_score": 10.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Valmistautuminen", "Sisällön selkeys"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 6000, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [7, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Antti Pohjanmeri": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 5976.1, "tapaamiset": 11, "avg_score": 8.9, "nps": 60, "n_feedback": 10, "asked_pct": 90, "top_successes": ["Välittäjän asenne", "Ammattitaito", "Ystävällisyys"], "top_failures": ["Välittäjän asenne"], "top_developments": ["Välityspalkkio"], "comments": ["Hyvä ensivaikutelma", "Nopeaa ja selkeää toimintaa. Kaikki vaikutti uskottavalta", "Tähän saakka kaikki hyvin.", "Henkilökemiat eivät vain kohdanneet. Paljon asiaan kuulumatonta kerrontaa ja en kokenut että hän sisäisesti asunnon idean / millä kulmalla juuri tämä asunto tulisi myydä. Valitsin välittäjän, jonka myyntispiikkiä itse ostajana jaksaisin kuunnella."], "myynti_monthly": [0, 0, 5976, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Anu Markkula": {"toimisto": "Tampere", "myynti": 5908.37, "tapaamiset": 3, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 5908, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Antti Sumari": {"toimisto": "Salo", "myynti": 5577.68, "tapaamiset": 21, "avg_score": 10.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [2789, 0, 2789, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Matti Parkkila": {"toimisto": "Tampere", "myynti": 5131.48, "tapaamiset": 24, "avg_score": 9.3, "nps": 90, "n_feedback": 10, "asked_pct": 90, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": ["Sisällön selkeys", "Asunnon hinta-arvio"], "comments": ["Välittäjä vaikutti ammattitaitoiselta. Puhui asiallisesti ja puolueettomasti.", "Eipä meikäläinen pysty teitä neuvomaan, toimintanne antoi kuvan ,asiantuntija asialla, kiitos"], "myynti_monthly": [2104, 3028, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [3, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Matti Veijanen": {"toimisto": "Tampere", "myynti": 4980.08, "tapaamiset": 18, "avg_score": 9.8, "nps": 100, "n_feedback": 6, "asked_pct": 83, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Hyvät ja positiivisesti erottuvat mainosmateriaalit. Mielenkiintoinen konsepti. ", "Arviokäynti oli helppo varata. Välittäjä kuunteli toiveemme ja kertoi selkeästi miten voisi auttaa myynnissä ja mitä Roof tarjoaa. Hyvä tapaaminen, jäi tosi hyvä fiilis!", "En ihan osaa sanoa suoralta kädeltä. Sain ihan hyviä neuvoja ja tietoa toiminnastanne, hinnoista , stailauksesta ym  ja olimme  samaa mieltä asioista. "], "myynti_monthly": [2869, 0, 2112, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Stefan Koivikko": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 4933.86, "tapaamiset": 16, "avg_score": 9.9, "nps": 100, "n_feedback": 10, "asked_pct": 100, "top_successes": ["Ammattitaito", "Ystävällisyys", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 797, 4137, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jani Punnala": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 4886.0, "tapaamiset": 7, "avg_score": 8.5, "nps": 50, "n_feedback": 4, "asked_pct": 100, "top_successes": ["Välittäjän asenne", "Valmistautuminen", "Ystävällisyys"], "top_failures": ["Välittäjän asenne", "Asunnon hinta-arvio"], "top_developments": [], "comments": ["Tunnin jaarittelu siitä, miksi minun pitäisi myydä juuri täysin remontoitu asuntoni samaan hintaan (367000€), kun talossamme myynnissä oleva vastaava täysin remontoimaton asunto, oli kärsimystä. Kun sanoin lopussa, että minä kyllä lasken, että tämä r"], "myynti_monthly": [0, 4886, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Meiju Patala": {"toimisto": "Järvenpää", "myynti": 4422.31, "tapaamiset": 16, "avg_score": 10.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [4422, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tuukka Leppänen": {"toimisto": "Vuokraus", "myynti": 4415.0, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [3770, 645, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Ann-Marie Nordström": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 3841.0, "tapaamiset": 20, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 3841, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 7, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mia Immonen": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 3101.59, "tapaamiset": 14, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 0, "top_successes": ["Ystävällisyys", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": ["viittaan edelliseen"], "myynti_monthly": [3102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Alina Ahonen": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 2857.37, "tapaamiset": 9, "avg_score": 9.6, "nps": 100, "n_feedback": 5, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "top_failures": [], "top_developments": [], "comments": ["Ei tule nyt mieleen"], "myynti_monthly": [0, 2857, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Mervi Nuutinen": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 2333.07, "tapaamiset": 40, "avg_score": 9.9, "nps": 100, "n_feedback": 7, "asked_pct": 71, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Todella ammattitaitoinen ja ystävällinen välittäjä. Palvelu on muutenkin ollut selkeää ja nopeaa näin alkumetreillä. Toivotaan, että sama tahti jatkuu loppuun asti 👍", "Välittäjän esiintyminen oli vakuuttava ja antoi yrityksestänne positiivisen kuvan.", "Välittäjä oli ammattitaitoisen oloinen ja välittäjä otti näkemystä kuitenkin asiakkaan omille näkemyksille tilaa jättäen. Välittäjä oli hyvin valmistautunut, ja otteeltaan rauhallinen. Välittäjä kuunteli asiakasta, mutta antoi oman asiantuntemuksensa"], "myynti_monthly": [0, 0, 2333, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [11, 11, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Miro Hovi": {"toimisto": "Kymenlaakso", "myynti": 2133.47, "tapaamiset": 18, "avg_score": 9.0, "nps": 67, "n_feedback": 3, "asked_pct": 67, "top_successes": ["Valmistautuminen", "Välittäjän asenne", "Sisällön selkeys"], "top_failures": [], "top_developments": ["Ammattitaito", "Sisällön selkeys"], "comments": ["Tässä vaiheessa prosessia on vaikea vielä arvioida kokonaisuutta."], "myynti_monthly": [2133, 0, 0, 3028, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [9, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Joni Sevoin": {"toimisto": "Tampere", "myynti": 1924.31, "tapaamiset": 0, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 1924, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kati Mäkinen": {"toimisto": "Oulu", "myynti": 1867.0, "tapaamiset": 1, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [1867, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sakari Ikonen": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 1649.4, "tapaamiset": 12, "avg_score": 9.5, "nps": 91, "n_feedback": 11, "asked_pct": 91, "top_successes": ["Ammattitaito", "Ystävällisyys", "Välittäjän asenne"], "top_failures": [], "top_developments": ["Ystävällisyys", "Ammattitaito", "Välittäjän asenne"], "comments": ["Sakari perehtyi yhtiön kuntoarvioon vuodelta 2014, yhtiön tilinpäätökseen 1.1. - 31.12. 2021, tutustui myytävään huoneistoon ja siinä toteutettuihin toimenpiteisiin. \nMinun näkökulmastani ajatellen ei paremmin voi hoitaa tehtävää.", "Kaikki oli hyvin.", "On hyvän tuntuinen pläni vanhemman talon myyntiin.", "Osaava välittäjä, tietämys talotelniikasta ja hyviä neuvoja kuntotarkastukseen liittyen."], "myynti_monthly": [0, 0, 1649, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jani Tuominen": {"toimisto": "Turku", "myynti": 0.0, "tapaamiset": 51, "avg_score": 9.0, "nps": 100, "n_feedback": 5, "asked_pct": 60, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": [], "top_developments": [], "comments": ["Asiakaspalvelu hyvää", "Hieno systeemi alusta alkaen. ", "Teillä on hyvä ja toimiva nettisysteemi."], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [11, 18, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Markus Tallinen": {"toimisto": "Kymenlaakso", "myynti": 0.0, "tapaamiset": 12, "avg_score": 9.0, "nps": 100, "n_feedback": 1, "asked_pct": 100, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Sisällön selkeys"], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tiia Stormbom": {"toimisto": "Helsinki / Miran Tiimi", "myynti": 0.0, "tapaamiset": 19, "avg_score": 8.3, "nps": 72, "n_feedback": 25, "asked_pct": 88, "top_successes": ["Ystävällisyys", "Välittäjän asenne", "Ammattitaito"], "top_failures": ["Välityspalkkio", "Valmistautuminen", "Ammattitaito"], "top_developments": ["Ystävällisyys"], "comments": ["Ymmärsitte hyvin mikä on lähtökohta ja pääsitte siitä jatkamaan hyvää polkua", "Tapaaminen oli mieluisa mistä jäi hyvä mieli.\nMiellyttävä ihminen minkä kanssa helppo keskustella vaikka oma tilanne vähän kämpän luopumisesta haikea.\n", "Mielestäni ensitapaamisessa ja sen jälkeisessä välittömässä yhteydenotossa ei ole parannettavaa. Tosin päätimme jo heti tämän välittäjän lähdettyä ovesta, että annamme asunnon Roofin/hänelle välitettäväksi (ei ollut ainoa, jolle tarjottiin.), joten e", "Tässä vaiheessa en osaa sanoa"], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [4, 6, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Miikka Susi": {"toimisto": "Helsinki / Helinin Tiimi", "myynti": 0.0, "tapaamiset": 7, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Rebecca Bethell": {"toimisto": "Espoon tiimi / Menestyjät", "myynti": 0.0, "tapaamiset": 3, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Jukka Norta": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 0.0, "tapaamiset": 21, "avg_score": 8.9, "nps": 88, "n_feedback": 16, "asked_pct": 94, "top_successes": ["Ammattitaito", "Ystävällisyys", "Valmistautuminen"], "top_failures": ["Valmistautuminen"], "top_developments": [], "comments": ["Kaiken kaikkiaan kympin arvoinen suoritus Jukalta.", "Tehokas ajankäyttö.", "Nopea, sujuva ja tehokas kilpailutus. Asiantunteva ja positiivinen keskustelu arviokäynnillä. Hyvä Paneutuminen kohteeseen ja taustatietoihin. ", "Välittäjä ei tullut eikä perunut. "], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [5, 10, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Sarah von Harpe": {"toimisto": "Espoon tiimi / Haastajat", "myynti": 0.0, "tapaamiset": 17, "avg_score": 0, "nps": 0, "n_feedback": 0, "asked_pct": 0, "top_successes": [], "top_failures": [], "top_developments": [], "comments": [], "myynti_monthly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset_monthly": [6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}}, "offices": {"Espoo": {"tapaamiset": 551, "toimarit": 268, "kaupat": 125.33, "myynti": 585813, "tap_kauppa": 22.75, "tap_toimari": 48.64, "toimari_kauppa": 46.76, "keskipalkkio": 4674, "avg_nps": 90}, "Helsinki": {"tapaamiset": 848, "toimarit": 346, "kaupat": 160.3, "myynti": 811495, "tap_kauppa": 18.9, "tap_toimari": 40.8, "toimari_kauppa": 46.33, "keskipalkkio": 5062, "avg_nps": 84}, "Hyvinkää": {"tapaamiset": 121, "toimarit": 71, "kaupat": 27, "myynti": 125824, "tap_kauppa": 22.31, "tap_toimari": 58.68, "toimari_kauppa": 38.03, "keskipalkkio": 4660, "avg_nps": 92}, "Järvenpää": {"tapaamiset": 72, "toimarit": 38, "kaupat": 11, "myynti": 62677, "tap_kauppa": 15.28, "tap_toimari": 52.78, "toimari_kauppa": 28.95, "keskipalkkio": 5698, "avg_nps": 100}, "Kymenlaakso": {"tapaamiset": 93, "toimarit": 52, "kaupat": 22, "myynti": 91884, "tap_kauppa": 23.66, "tap_toimari": 55.91, "toimari_kauppa": 42.31, "keskipalkkio": 4177, "avg_nps": 81}, "Pori": {"tapaamiset": 88, "toimarit": 50, "kaupat": 13, "myynti": 61042, "tap_kauppa": 14.77, "tap_toimari": 56.82, "toimari_kauppa": 26.0, "keskipalkkio": 4696, "avg_nps": 94}, "Raasepori": {"tapaamiset": 90, "toimarit": 62, "kaupat": 27, "myynti": 125507, "tap_kauppa": 30.0, "tap_toimari": 68.89, "toimari_kauppa": 43.55, "keskipalkkio": 4648}, "Salo": {"tapaamiset": 119, "toimarit": 39, "kaupat": 12, "myynti": 44358, "tap_kauppa": 10.08, "tap_toimari": 32.77, "toimari_kauppa": 30.77, "keskipalkkio": 3697, "avg_nps": 50}, "Tampere": {"tapaamiset": 237, "toimarit": 137, "kaupat": 63, "myynti": 289149, "tap_kauppa": 26.58, "tap_toimari": 57.81, "toimari_kauppa": 45.99, "keskipalkkio": 4590, "avg_nps": 84}, "Turku": {"tapaamiset": 83, "toimarit": 31, "kaupat": 6, "myynti": 22392, "tap_kauppa": 7.23, "tap_toimari": 37.35, "toimari_kauppa": 19.35, "keskipalkkio": 3732, "avg_nps": 100}, "Oulu": {"tapaamiset": 340, "toimarit": 224, "kaupat": 106, "myynti": 479635, "tap_kauppa": 31.18, "tap_toimari": 65.88, "toimari_kauppa": 47.32, "keskipalkkio": 4525, "avg_nps": 78}, "Vuokraus": {"tapaamiset": 0, "toimarit": 97, "kaupat": 107, "myynti": 101028, "tap_kauppa": 0, "tap_toimari": 0, "toimari_kauppa": 0, "keskipalkkio": 944}}, "konserni": {"myynti": 2800804, "tapaamiset": 2642, "toimarit": 1318, "kaupat": 572.63, "tap_kauppa": 21.67, "tap_toimari": 49.89, "toimari_kauppa": 43.45, "keskipalkkio": 4715}, "office_monthly": {"Oulu": {"myynti": [103891, 204679, 171064, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [105, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Espoo": {"myynti": [133574, 193332, 258907, 75335, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [167, 185, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Helsinki": {"myynti": [194585, 278604, 338306, 7324, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [234, 312, 74, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Raasepori": {"myynti": [58176, 36172, 31159, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [38, 25, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Hyvinkää": {"myynti": [53977, 49558, 22288, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [28, 52, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Tampere": {"myynti": [65456, 95078, 128615, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [66, 73, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Vuokraus": {"myynti": [34398, 29804, 36826, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Järvenpää": {"myynti": [4422, 11826, 46428, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [21, 22, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Kymenlaakso": {"myynti": [27543, 31710, 32631, 3028, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [35, 31, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Pori": {"myynti": [12596, 17928, 30518, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [26, 19, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Salo": {"myynti": [12359, 11293, 20706, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [33, 53, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "Turku": {"myynti": [6374, 16018, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "tapaamiset": [22, 26, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0]}}};
+const agents = D.agents;
+const K = D.konserni;
+
+// Populate dropdown
+const sel = document.getElementById('agSel');
+Object.keys(agents).sort((a,b)=>a.localeCompare(b,'fi')).forEach(n=>{
+  sel.innerHTML += `<option value="${n}">${n}</option>`;
+});
+
+// ── URL PARAMS ─────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const preselect = params.get('agent');
+if(preselect && agents[preselect]){
+  sel.value = preselect;
+  loadAgent();
+}
+
+// ── SHARE LINK ─────────────────────────────────────
+function updateShareUrl(name){
+  const url = window.location.href.split('?')[0]+'?agent='+encodeURIComponent(name);
+  document.getElementById('shareUrl').textContent = url;
+  document.getElementById('shareBanner').style.display = 'flex';
+}
+function copyUrl(){
+  const url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard?.writeText(url).catch(()=>{});
+  const msg = document.getElementById('copyMsg');
+  msg.style.opacity='1';
+  setTimeout(()=>msg.style.opacity='0', 2000);
+}
+
+// ── CHART INSTANCES ────────────────────────────────
+let cScoreI=null, cMonthI=null, cDonutI=null;
+
+// ── HELPERS ────────────────────────────────────────
+function fmtK(n){ return n>=1000?(n/1000).toFixed(0)+' k€':n+'€' }
+function npsCol(n){ return n>=80?'#16a34a':n>=50?'#D97706':'#DC2626' }
+function scoreCol(s){ return s>=9?'#16a34a':s>=8?'#D97706':'#DC2626' }
+
+const CAT_COLORS = {
+  'Ystävällisyys':'#16a34a','Ammattitaito':'#1D6FA4','Valmistautuminen':'#7c3aed',
+  'Välittäjän asenne':'#E8501C','Sisällön selkeys':'#0891b2',
+  'Välityspalkkio':'#D97706','Asunnon hinta-arvio':'#DC2626'
+};
+
+// ── MAIN LOAD ──────────────────────────────────────
+function loadAgent(){
+  const name = sel.value;
+  if(!name){
+    document.getElementById('noAgent').style.display='block';
+    document.getElementById('agContent').style.display='none';
+    document.getElementById('shareBanner').style.display='none';
+    return;
+  }
+  const d = agents[name];
+  if(!d) return;
+
+  document.getElementById('noAgent').style.display='none';
+  document.getElementById('agContent').style.display='block';
+  updateShareUrl(name);
+
+  // HERO
+  const initials = name.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('av').textContent = initials;
+  document.getElementById('hName').textContent = name;
+  document.getElementById('hTeam').textContent = d.toimisto;
+
+  // Badges
+  const badges=[];
+  if(d.avg_score>=9.5) badges.push({cls:'good',txt:'🌟 Erinomainen arvosana'});
+  else if(d.avg_score<8&&d.avg_score>0) badges.push({cls:'bad',txt:'⚠️ Arvosana kehitystä tarvitsee'});
+  if(d.asked_pct>=90) badges.push({cls:'good',txt:'🎯 Toimek.ehdottaminen huipussa'});
+  else if(d.asked_pct>0&&d.asked_pct<70) badges.push({cls:'warn',txt:'📋 Ehdota toimeksiantoa aktiivisemmin'});
+  if(d.nps>=90) badges.push({cls:'good',txt:'💫 NPS '+d.nps+' — huippuluokka'});
+  document.getElementById('hBadges').innerHTML=badges.map(b=>`<div class="hbadge ${b.cls}">${b.txt}</div>`).join('');
+
+  // Hero KPIs
+  document.getElementById('hSales').textContent = d.myynti>0?fmtK(Math.round(d.myynti)):'—';
+  document.getElementById('hMeet').textContent = d.tapaamiset||'—';
+  document.getElementById('hScore').textContent = d.avg_score>0?d.avg_score.toFixed(1):'—';
+  document.getElementById('hScore').style.color = d.avg_score>0?scoreCol(d.avg_score):'rgba(255,255,255,.5)';
+  document.getElementById('hNps').textContent = d.nps||'—';
+  document.getElementById('hNps').style.color = d.nps?npsCol(d.nps):'rgba(255,255,255,.5)';
+  document.getElementById('hAsked').textContent = d.asked_pct>0?d.asked_pct+'%':'—';
+
+  // ── SCORE CARD ──
+  document.getElementById('bigScore').textContent = d.avg_score>0?d.avg_score.toFixed(1):'—';
+  document.getElementById('bigScore').style.color = d.avg_score>0?scoreCol(d.avg_score):'var(--muted)';
+  document.getElementById('scoreSub').textContent = d.n_feedback>0?`${d.n_feedback} asiakaspalautetta · asteikko 0–10`:'Ei vielä palautteita';
+  document.getElementById('npsLine').innerHTML = d.nps?
+    `NPS <b style="color:${npsCol(d.nps)}">${d.nps}</b> — ${d.nps>=80?'🏆 Erinomainen suosittelijasuhde':d.nps>=50?'👍 Hyvä taso':'📈 Kehitystä on tapahtumassa'}` : '';
+
+  if(cScoreI) cScoreI.destroy();
+  cScoreI = new Chart(document.getElementById('cScore'),{
+    type:'bar',
+    data:{
+      labels:['Sinä','Konserni ka.','Tavoite'],
+      datasets:[{data:[d.avg_score||0, 9.2, 9.5], backgroundColor:['#E8501C','#94a3b8','#dcfce7'], borderRadius:6}]
+    },
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{y:{min:0,max:10,ticks:{callback:v=>v.toFixed(0)}},x:{grid:{display:false}}}}
+  });
+
+  // ── SUCCESSES ──
+  const succEl = document.getElementById('succBars');
+  if(d.top_successes?.length){
+    succEl.innerHTML = d.top_successes.map((cat,i)=>`
+      <div class="fb-row">
+        <div class="fb-label">${cat}</div>
+        <div class="fb-track"><div class="fb-fill" style="width:${100-i*22}%;background:${CAT_COLORS[cat]||'#16a34a'}"></div></div>
+        <span class="fb-badge s">#${i+1}</span>
+      </div>`).join('');
+  } else {
+    succEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:.82rem">✅ Ei merkintöjä vielä</div>';
+  }
+
+  // ── DEVELOPMENTS ──
+  const devEl = document.getElementById('devBars');
+  const allDev=[...(d.top_failures||[]).map(c=>({c,t:'haaste'})),...(d.top_developments||[]).map(c=>({c,t:'kehitys'}))];
+  if(allDev.length){
+    devEl.innerHTML=allDev.slice(0,4).map((item,i)=>`
+      <div class="fb-row">
+        <div class="fb-label">${item.c}</div>
+        <div class="fb-track"><div class="fb-fill" style="width:${85-i*15}%;background:${item.t==='haaste'?'#DC2626':'#D97706'}"></div></div>
+        <span class="fb-badge ${item.t==='haaste'?'d':'w'}">${item.t==='haaste'?'Haaste':'Kehitys'}</span>
+      </div>`).join('');
+  } else {
+    devEl.innerHTML='<div style="text-align:center;padding:20px;color:#166534;font-size:.82rem">🎉 Ei kehityskohteita asiakaspalautteissa!</div>';
+  }
+
+  // ── MONTHLY TREND ──
+  const monthly = d.myynti_monthly || [0,0,0,0,0,0,0,0,0,0,0,0];
+  const m3 = monthly.slice(0,3);
+  const maxM = Math.max(...m3, 1);
+  const mLabels = ['Tammikuu','Helmikuu','Maaliskuu'];
+
+  document.getElementById('monthBars').innerHTML = m3.map((v,i)=>`
+    <div class="mbar-wrap">
+      <div class="mbar-val">${v>0?fmtK(Math.round(v)):''}</div>
+      <div class="mbar" style="height:${Math.max(4,Math.round(v/maxM*72))}px;background:${['#1D6FA4','#E8501C','#16a34a'][i]}"></div>
+      <div class="mbar-label">${['Tam','Hel','Maa'][i]}</div>
+    </div>`).join('');
+
+  if(cMonthI) cMonthI.destroy();
+  const trend = m3[2]-m3[0];
+  cMonthI = new Chart(document.getElementById('cMonthLine'),{
+    type:'line',
+    data:{
+      labels:mLabels,
+      datasets:[
+        {label:'Sinä',data:m3,borderColor:'#E8501C',backgroundColor:'#E8501C22',fill:true,tension:.3,borderWidth:2.5,pointRadius:5},
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtK(Math.round(c.raw))}}},
+      scales:{y:{ticks:{callback:v=>(v/1000).toFixed(0)+'k€'},grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+  });
+
+  // ── COMPARISON ──
+  const cmpMetrics=[
+    {label:'Asiakasarvosana',mine:d.avg_score,avg:9.2,max:10,unit:'/10'},
+    {label:'Tapaamiset YTD',mine:d.tapaamiset,avg:23,max:Math.max(d.tapaamiset,50),unit:' kpl'},
+    {label:'Toimek. ehdotti %',mine:d.asked_pct,avg:74,max:100,unit:'%'},
+    {label:'NPS',mine:d.nps,avg:85,max:100,unit:''},
+  ];
+  document.getElementById('cmpContent').innerHTML=cmpMetrics.map(m=>{
+    const mp=m.mine>0?Math.min(100,m.mine/m.max*100):0;
+    const ap=Math.min(100,m.avg/m.max*100);
+    const better=m.mine>=m.avg;
+    const col=m.mine>0?(better?'#16a34a':'#E8501C'):'#94a3b8';
+    return `<div class="cmp-row">
+      <div class="cmp-label">${m.label}</div>
+      <div class="cmp-bars">
+        <div class="cmp-line">
+          <div class="cmp-bar" style="width:${mp*1.5}px;background:${col}"></div>
+          <div class="cmp-val" style="color:${col}">${m.mine>0?m.mine+m.unit:'—'} <b style="font-size:.68rem">Sinä</b></div>
+        </div>
+        <div class="cmp-line">
+          <div class="cmp-bar" style="width:${ap*1.5}px;background:#cbd5e1"></div>
+          <div class="cmp-val" style="color:var(--muted)">${m.avg}${m.unit} konserni</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── ACTIONS ──
+  const acts=[];
+  if(d.avg_score>=9.5) acts.push({cls:'good',icon:'✅',txt:`<strong>Asiakasarvosana ${d.avg_score.toFixed(1)}/10</strong> — olet ehdottomassa huipussa. Jaa onnistumistesi reseptiä tiimissä!`});
+  else if(d.avg_score>0&&d.avg_score<8.5) acts.push({cls:'improve',icon:'💡',txt:`<strong>Arvosana ${d.avg_score.toFixed(1)}/10</strong> — mieti, mikä yhdessä käynnissä voisi saada asiakkaan sanomaan "wow".`});
+
+  if(d.asked_pct>=90) acts.push({cls:'good',icon:'✅',txt:`<strong>Ehdotat toimeksiantoa ${d.asked_pct}%</strong> käynneistä — se on konsernin huipputasoa. Pidä tätä yllä.`});
+  else if(d.asked_pct>0&&d.asked_pct<70) acts.push({cls:'improve',icon:'💡',txt:`<strong>Toimeksiantoehdotus ${d.asked_pct}%</strong> — tavoite on 90%+. Harjoittele: "Tehdäänkö yhdessä toimeksianto tänään?"`});
+
+  if((d.top_failures||[]).includes('Välityspalkkio')) acts.push({cls:'improve',icon:'💡',txt:`<strong>Välityspalkkio nousee esiin.</strong> Valmistele arvo-argumentti ennen jokaista käyntiä — mitä asiakas saa vastineeksi?`});
+  if((d.top_failures||[]).includes('Valmistautuminen')) acts.push({cls:'improve',icon:'💡',txt:`<strong>Valmistautuminen</strong> on kehityskohde. 15 minuutin kohdeanalyysi ennen käyntiä muuttaa asiakkaan kokemuksen merkittävästi.`});
+  if((d.top_failures||[]).includes('Asunnon hinta-arvio')) acts.push({cls:'improve',icon:'💡',txt:`<strong>Hinta-arvio aiheuttaa kitkaa.</strong> Ole proaktiivinen — selitä markkinatilanne jo ennen kuin asiakas kysyy.`});
+  if((d.top_successes||[]).includes('Ammattitaito')&&(d.top_successes||[]).includes('Välittäjän asenne')) acts.push({cls:'good',icon:'✅',txt:`<strong>Ammattitaito ja asenne</strong> ovat vahvuutesi asiakkaiden silmissä — nämä ovat myynnin kulmakiviä.`});
+  if(d.myynti>50000) acts.push({cls:'good',icon:'✅',txt:`<strong>Myyntisuorituksesi ${fmtK(Math.round(d.myynti))}</strong> on merkittävä panoksesi tiimille — pidä vauhti yllä!`});
+
+  if(!acts.length) acts.push({cls:'improve',icon:'💡',txt:'Aktivoi asiakaspalautteiden keräys — tarvitaan vähintään 5 palautetta konkreettisiin ehdotuksiin.'});
+
+  document.getElementById('actions').innerHTML=acts.map(a=>`
+    <div class="action ${a.cls}">
+      <div class="action-icon">${a.icon}</div>
+      <div class="action-text">${a.txt}</div>
+    </div>`).join('');
+
+  // ── COMMENTS ──
+  const valid=(d.comments||[]).filter(c=>c&&c.length>20&&!c.includes('@')&&!c.toLowerCase().includes('test'));
+  document.getElementById('comments').innerHTML=valid.length?
+    valid.map(c=>`<div class="comment">${c}"</div>`).join(''):
+    '<div style="text-align:center;padding:24px;color:var(--muted);font-size:.82rem">📭 Ei vapaita kommentteja vielä</div>';
+
+  // ── DONUT ──
+  if(cDonutI) cDonutI.destroy();
+  if(d.asked_pct>0){
+    document.getElementById('cDonut').style.display='block';
+    cDonutI=new Chart(document.getElementById('cDonut'),{
+      type:'doughnut',
+      data:{
+        labels:['Ehdotti','Ei ehdottanut'],
+        datasets:[{data:[d.asked_pct,100-d.asked_pct],backgroundColor:['#16a34a','#fee2e2'],borderWidth:2,borderColor:'white'}]
+      },
+      options:{cutout:'68%',responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>c.raw+'%'}}}}
+    });
+    document.getElementById('donutVal').textContent=d.asked_pct+'%';
+    document.getElementById('donutNote').textContent=d.asked_pct>=90?'🌟 Huipputaso! Jatka samaan malliin.':d.asked_pct>=70?'👍 Hyvällä uralla — tavoite on 90%+.':'📈 Kehitystä tarvitaan — ehdota jokaisella käynnillä.';
+  } else {
+    document.getElementById('cDonut').style.display='none';
+    document.getElementById('donutVal').textContent='—';
+    document.getElementById('donutNote').textContent='Ei riittävästi dataa';
+  }
+}
+</script>
+</body>
+</html>
