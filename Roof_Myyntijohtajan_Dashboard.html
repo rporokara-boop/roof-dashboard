@@ -959,11 +959,11 @@ function csvRows(text){const lines=text.trim().split('\n');const hdrs=parseCSVRo
 async function loadFromSheets(){
   try{
     const [t1,t2,t3,t4,t5]=await Promise.all([
-      fetch(SHEETS_BASE+'1703238765').then(r=>r.text()),
-      fetch(SHEETS_BASE+'1973988137').then(r=>r.text()),
-      fetch(SHEETS_BASE+'1332606454').then(r=>r.text()),
-      fetch(SHEETS_BASE+'1321415806').then(r=>r.text()),
-      fetch(SHEETS_BASE+'37348123').then(r=>r.text())
+      fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'1332606454'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'1321415806'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'37348123'+'&t='+Date.now()).then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
