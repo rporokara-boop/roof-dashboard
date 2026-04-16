@@ -269,6 +269,7 @@ input.search{width:240px}
 <script>
 function checkAuth(){
   if(document.getElementById('auth-input').value==='RoofMyyntijohto2026'){
+    localStorage.setItem('roof_auth',Date.now());
     document.getElementById('auth-overlay').style.display='none';
   } else {
     document.getElementById('auth-error').style.display='block';
@@ -276,6 +277,10 @@ function checkAuth(){
     document.getElementById('auth-input').focus();
   }
 }
+(function(){
+  const t=localStorage.getItem('roof_auth');
+  if(t&&Date.now()-t<3600000)document.getElementById('auth-overlay').style.display='none';
+})();
 </script>
 
 <!-- HEADER -->
