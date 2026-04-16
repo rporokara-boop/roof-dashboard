@@ -256,6 +256,7 @@ function checkAuth(){
       </div>
       <div class="hero-kpis">
         <div class="hkpi"><div class="hkpi-val" id="hSales">—</div><div class="hkpi-label">Myynti YTD</div></div>
+        <div class="hkpi"><div class="hkpi-val" id="hVauhti">—</div><div class="hkpi-label">Vauhti/v</div></div>
         <div class="hkpi"><div class="hkpi-val" id="hMeet">—</div><div class="hkpi-label">Tapaamiset</div></div>
         <div class="hkpi"><div class="hkpi-val" id="hScore">—</div><div class="hkpi-label">Arvosana</div></div>
         <div class="hkpi"><div class="hkpi-val" id="hNps">—</div><div class="hkpi-label">NPS</div></div>
@@ -400,6 +401,7 @@ function loadAgent(){
 
   // Hero KPIs
   document.getElementById('hSales').textContent = d.myynti>0?fmtK(Math.round(d.myynti)):'—';
+  document.getElementById('hVauhti').textContent = d.vauhti>0?fmtK(Math.round(d.vauhti)):'—';
   document.getElementById('hMeet').textContent = d.tapaamiset||'—';
   document.getElementById('hScore').textContent = d.avg_score>0?d.avg_score.toFixed(1):'—';
   document.getElementById('hScore').style.color = d.avg_score>0?scoreCol(d.avg_score):'rgba(255,255,255,.5)';
@@ -590,6 +592,7 @@ async function loadFromSheets(){
       if(!D.agents[name])D.agents[name]={toimisto:'',myynti:0,tapaamiset:0,avg_score:0,nps:0,n_feedback:0,asked_pct:0,top_successes:[],top_failures:[],top_developments:[],comments:[],myynti_monthly:Array(12).fill(0),tapaamiset_monthly:Array(12).fill(0)};
       D.agents[name].toimisto=row['Toimisto']||D.agents[name].toimisto;
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
+      D.agents[name].vauhti=parseFinNum(row['Vauhti']);
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
     csvRows(t2).forEach(row=>{

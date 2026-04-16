@@ -438,6 +438,7 @@ function checkAuth(){
     <select class="filter" id="agOffice" onchange="filterAg()"><option value="">Kaikki toimistot</option></select>
     <select class="filter" id="agSort" onchange="filterAg()">
       <option value="myynti">Järjestä: Myynti</option>
+      <option value="vauhti">Järjestä: Vauhti</option>
       <option value="nps">Järjestä: NPS</option>
       <option value="tapaamiset">Järjestä: Tapaamiset</option>
       <option value="score">Järjestä: Arvosana</option>
@@ -448,7 +449,7 @@ function checkAuth(){
     <table class="atbl">
       <thead><tr>
         <th>#</th><th>Välittäjä</th><th>Toimisto</th>
-        <th>Myynti YTD</th><th>Tapaamiset</th>
+        <th>Myynti YTD</th><th>Vauhti/v</th><th>Tapaamiset</th>
         <th>Arvosana</th><th>NPS</th><th>Toimek.%</th>
         <th>Top onnistuminen</th><th>Kehitettävää</th>
       </tr></thead>
@@ -761,6 +762,7 @@ function buildOfficeGrid(){
         <div class="oc-num"><div class="oc-num-val">${d.toimarit}</div><div class="oc-num-label">Toimarit</div></div>
         <div class="oc-num"><div class="oc-num-val">${Math.round(d.kaupat)}</div><div class="oc-num-label">Kaupat</div></div>
         <div class="oc-num"><div class="oc-num-val">${(d.myynti/1000).toFixed(0)}k€</div><div class="oc-num-label">Myynti</div></div>
+        <div class="oc-num"><div class="oc-num-val">${d.vauhti>0?(d.vauhti/1000).toFixed(0)+'k€':'—'}</div><div class="oc-num-label">Vauhti/v</div></div>
       </div>
       <div class="funnel">
         <div class="fs ${convCls(d.tap_toimari)}"><span class="fs-pct">${d.tap_toimari.toFixed(0)}%</span>Tap→Toimari</div>
@@ -802,6 +804,7 @@ function renderOfficeBody(list){
     return `<tr class="or" data-n="${name.toLowerCase()}">
       <td style="font-weight:700">${name}</td>
       <td><b>${d.myynti>0?fmtK(Math.round(d.myynti)):'—'}</b></td>
+      <td>${d.vauhti>0?fmtK(Math.round(d.vauhti)):'—'}</td>
       <td>${d.tapaamiset||'—'}</td>
       <td>${sc}</td><td>${nb}</td>
       <td>${d.asked_pct>0?d.asked_pct+'%':'—'}</td>
@@ -901,6 +904,7 @@ function renderAg(){
   });
   list.sort((a,b)=>{
     if(sort==='myynti') return b[1].myynti-a[1].myynti;
+    if(sort==='vauhti') return (b[1].vauhti||0)-(a[1].vauhti||0);
     if(sort==='nps') return b[1].nps-a[1].nps;
     if(sort==='tapaamiset') return b[1].tapaamiset-a[1].tapaamiset;
     if(sort==='score') return b[1].avg_score-a[1].avg_score;
@@ -919,6 +923,7 @@ function renderAg(){
       <td style="font-weight:700">${name}</td>
       <td><span class="tag n" style="font-size:.65rem">${d.toimisto}</span></td>
       <td><b>${d.myynti>0?fmtK(Math.round(d.myynti)):'—'}</b></td>
+      <td>${d.vauhti>0?fmtK(Math.round(d.vauhti)):'—'}</td>
       <td>${d.tapaamiset||'—'}</td>
       <td>${sc}</td><td>${nb}</td>
       <td>${d.asked_pct>0?d.asked_pct+'%':'—'}</td>
@@ -965,6 +970,7 @@ async function loadFromSheets(){
       if(!D.agents[name])D.agents[name]={toimisto:'',myynti:0,tapaamiset:0,avg_score:0,nps:0,n_feedback:0,asked_pct:0,top_successes:[],top_failures:[],top_developments:[],comments:[],myynti_monthly:Array(12).fill(0),tapaamiset_monthly:Array(12).fill(0)};
       D.agents[name].toimisto=row['Toimisto']||D.agents[name].toimisto;
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
+      D.agents[name].vauhti=parseFinNum(row['Vauhti']);
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
     csvRows(t2).forEach(row=>{
@@ -976,8 +982,8 @@ async function loadFromSheets(){
     const offAgg={};
     Object.values(D.agents).forEach(ag=>{
       const o=ag.toimisto;if(!o)return;
-      if(!offAgg[o])offAgg[o]={myynti:0,tapaamiset:0,mMyynti:Array(12).fill(0),mTap:Array(12).fill(0)};
-      offAgg[o].myynti+=ag.myynti;offAgg[o].tapaamiset+=ag.tapaamiset;
+      if(!offAgg[o])offAgg[o]={myynti:0,vauhti:0,tapaamiset:0,mMyynti:Array(12).fill(0),mTap:Array(12).fill(0)};
+      offAgg[o].myynti+=ag.myynti;offAgg[o].vauhti+=(ag.vauhti||0);offAgg[o].tapaamiset+=ag.tapaamiset;
       ag.myynti_monthly.forEach((v,i)=>offAgg[o].mMyynti[i]+=v);
       ag.tapaamiset_monthly.forEach((v,i)=>offAgg[o].mTap[i]+=v);
     });
@@ -994,6 +1000,7 @@ async function loadFromSheets(){
     Object.keys(offAgg).forEach(o=>{
       if(!D.offices[o])return;
       D.offices[o].myynti=Math.round(offAgg[o].myynti);
+      D.offices[o].vauhti=Math.round(offAgg[o].vauhti);
       D.offices[o].tapaamiset=offAgg[o].tapaamiset;
       const toimarit=offToimarit[o]||0;
       const kaupat=offKaupat[o]||0;
