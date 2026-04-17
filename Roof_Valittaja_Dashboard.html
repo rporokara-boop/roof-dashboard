@@ -574,8 +574,9 @@ function parseCSVRow(line){
 }
 function csvRows(text){
   const lines=text.trim().split('\n');
-  const hdrs=parseCSVRow(lines[0]);
-  return lines.slice(1).map(l=>{
+  let hi=0;for(let i=0;i<Math.min(5,lines.length);i++){if(lines[i].includes('Välittäjä')){hi=i;break;}}
+  const hdrs=parseCSVRow(lines[hi]);
+  return lines.slice(hi+1).map(l=>{
     const v=parseCSVRow(l);const row={};
     hdrs.forEach((h,i)=>row[h]=v[i]||'');return row;
   }).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Välittäjä'&&r['Välittäjä']!=='-');
