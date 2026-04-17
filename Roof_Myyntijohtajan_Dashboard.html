@@ -1094,14 +1094,23 @@ async function loadFromSheets(){
       ct.data.datasets[0].backgroundColor=OFFICE_ORDER.filter(noVuok).map(o=>{const v=D.offices[o]?D.offices[o].tap_toimari:0;return v>=55?'#16a34a':v>=40?'#D97706':'#DC2626';});
       ct.update();
     }
-    // Re-render agents table
+    // Reset all page states so they rebuild with fresh data
     agBuilt=false;
-    const agPage=document.getElementById('page-agents');
-    if(agPage&&agPage.style.display!=='none')buildAgentTable();
-    // Reset rankings
+    if(trendInst){trendInst.destroy();trendInst=null;}
+    if(trendTotInst){trendTotInst.destroy();trendTotInst=null;}
+    if(radarInst){radarInst.destroy();radarInst=null;}
+    if(scatterInst){scatterInst.destroy();scatterInst=null;}
+    const bBody=document.getElementById('benchBody');if(bBody)bBody.innerHTML='';
     ['rSales','rNps','rMeet','rAsked'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
-    const rPage=document.getElementById('page-rankings');
-    if(rPage&&rPage.style.display!=='none')buildRankings();
+    // Rebuild whichever page is currently visible
+    const activeId=document.querySelector('.page.active')?.id?.replace('page-','');
+    if(activeId==='agents') buildAgTable();
+    else if(activeId==='trend') buildTrend();
+    else if(activeId==='bench') buildBench();
+    else if(activeId==='rankings') buildRankings();
+    else if(activeId==='offices') buildOfficeGrid();
+    // Rebuild pizza if an office was already selected
+    if(pizzaCurrentOffice) buildPizzaForOffice(pizzaCurrentOffice);
   }catch(e){
     console.warn('Sheets-data ei saatavilla, käytetään tallennettua dataa.',e);
   }
