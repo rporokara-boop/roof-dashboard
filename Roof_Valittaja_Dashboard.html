@@ -456,25 +456,28 @@ function loadAgent(){
 
   // ── MONTHLY TREND ──
   const monthly = d.myynti_monthly || [0,0,0,0,0,0,0,0,0,0,0,0];
-  const m3 = monthly.slice(0,3);
-  const maxM = Math.max(...m3, 1);
-  const mLabels = ['Tammikuu','Helmikuu','Maaliskuu'];
+  const lastMi = monthly.reduce((last,v,i)=>v>0?i:last, 0);
+  const mActive = monthly.slice(0, lastMi+1);
+  const mLabels = MONTHS.slice(0, lastMi+1);
+  const mShort = ['Tam','Hel','Maa','Huh','Tou','Kes','Hei','Elo','Syy','Lok','Mar','Jou'].slice(0, lastMi+1);
+  const mColors = ['#A09074','#28D1CD','#16a34a','#003848','#F5A623','#6366f1','#ec4899','#f97316','#14b8a6','#8b5cf6','#0ea5e9','#84cc16'];
+  const maxM = Math.max(...mActive, 1);
 
-  document.getElementById('monthBars').innerHTML = m3.map((v,i)=>`
+  document.getElementById('monthBars').innerHTML = mActive.map((v,i)=>`
     <div class="mbar-wrap">
       <div class="mbar-val">${v>0?fmtK(Math.round(v)):''}</div>
-      <div class="mbar" style="height:${Math.max(4,Math.round(v/maxM*72))}px;background:${['#A09074','#28D1CD','#16a34a'][i]}"></div>
-      <div class="mbar-label">${['Tam','Hel','Maa'][i]}</div>
+      <div class="mbar" style="height:${Math.max(4,Math.round(v/maxM*72))}px;background:${mColors[i]}"></div>
+      <div class="mbar-label">${mShort[i]}</div>
     </div>`).join('');
 
   if(cMonthI) cMonthI.destroy();
-  const trend = m3[2]-m3[0];
+  const trend = mActive[mActive.length-1]-(mActive[0]||0);
   cMonthI = new Chart(document.getElementById('cMonthLine'),{
     type:'line',
     data:{
       labels:mLabels,
       datasets:[
-        {label:'Sinä',data:m3,borderColor:'#28D1CD',backgroundColor:'#28D1CD22',fill:true,tension:.3,borderWidth:2.5,pointRadius:5},
+        {label:'Sinä',data:mActive,borderColor:'#28D1CD',backgroundColor:'#28D1CD22',fill:true,tension:.3,borderWidth:2.5,pointRadius:5},
       ]
     },
     options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtK(Math.round(c.raw))}}},

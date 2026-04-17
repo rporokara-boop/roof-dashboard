@@ -729,14 +729,19 @@ function buildTrend(){
 
   const officesWithData=OFFICE_ORDER.filter(o=>officeMonthly[o]);
 
+  // Find last month with any data
+  let lastMi=0;
+  officesWithData.forEach(o=>{(officeMonthly[o]?.myynti||[]).forEach((v,i)=>{if(v>0)lastMi=Math.max(lastMi,i);});});
+  const activeMonths=MONTHS.slice(0,lastMi+1);
+
   // Line chart
   trendInst=new Chart(document.getElementById('cTrend'),{
     type:'line',
     data:{
-      labels:MONTHS3,
+      labels:activeMonths,
       datasets:officesWithData.map((o,i)=>({
         label:o,
-        data:(officeMonthly[o]?.myynti||[]).slice(0,3),
+        data:(officeMonthly[o]?.myynti||[]).slice(0,lastMi+1),
         borderColor:PALETTE[i%PALETTE.length],
         backgroundColor:'transparent',
         tension:.3,
@@ -756,18 +761,18 @@ function buildTrend(){
   });
 
   // Total bar
-  const totals=MONTHS3.map((_,mi)=>officesWithData.reduce((s,o)=>{
+  const totals=activeMonths.map((_,mi)=>officesWithData.reduce((s,o)=>{
     const m=officeMonthly[o]?.myynti||[];
     return s+(m[mi]||0);
   },0));
   trendTotInst=new Chart(document.getElementById('cTrendTotal'),{
     type:'bar',
     data:{
-      labels:MONTHS3,
+      labels:activeMonths,
       datasets:[{
         label:'Konserni yht.',
         data:totals,
-        backgroundColor:['#A09074','#28D1CD','#16a34a'],
+        backgroundColor:activeMonths.map((_,i)=>PALETTE[i%PALETTE.length]),
         borderRadius:8
       }]
     },
