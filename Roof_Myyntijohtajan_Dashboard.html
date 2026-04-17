@@ -642,7 +642,7 @@ function buildPizzaOfficeButtons(){
     b.onclick=()=>pizzaToggleMonth(i);
     mb.appendChild(b);
   });
-  const officesWithAgents=['Espoo','Helsinki','Oulu','Tampere','Hyvinkää','Raasepori','Kymenlaakso','Pori','Järvenpää','Salo','Turku','Vuokraus'];
+  const officesWithAgents=Object.keys(offices).filter(o=>offices[o]&&offices[o].myynti>0).sort((a,b)=>a.localeCompare(b,'fi'));
   officesWithAgents.forEach(o=>{
     const btn=document.createElement('button');
     btn.textContent=o;
@@ -1102,6 +1102,7 @@ async function loadFromSheets(){
     if(scatterInst){scatterInst.destroy();scatterInst=null;}
     const bBody=document.getElementById('benchBody');if(bBody)bBody.innerHTML='';
     ['rSales','rNps','rMeet','rAsked'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+    const pOff=document.getElementById('pizzaOfficeButtons');if(pOff)pOff.innerHTML='';
     // Rebuild whichever page is currently visible
     const activeId=document.querySelector('.page.active')?.id?.replace('page-','');
     if(activeId==='agents') buildAgTable();
