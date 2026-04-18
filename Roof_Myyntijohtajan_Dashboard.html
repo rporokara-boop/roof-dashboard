@@ -1046,7 +1046,6 @@ async function loadFromSheets(){
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].vauhti=parseFinNum(row['Vauhti']);
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
-      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     csvRows(t2).forEach(row=>{
       const name=row['Välittäjä'];if(!D.agents[name])return;

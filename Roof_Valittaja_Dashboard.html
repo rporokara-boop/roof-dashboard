@@ -446,7 +446,7 @@ function loadAgent(){
   if(cConvA){cConvA.destroy();cConvA=null;}
   if(cConvB){cConvB.destroy();cConvB=null;}
   const cs=document.getElementById('convSection');
-  const hasConv=d.tap_kauppa!=null||d.tap_toimari!=null||d.tavoite!=null;
+  const hasConv=d.tap_kauppa!=null||d.tap_toimari!=null||(d.tavoite&&d.tavoite>0);
   if(hasConv){
     const tavoite=d.tavoite||0;
     const myyntiPct=tavoite>0?Math.min(100,Math.round(d.myynti/tavoite*100)):null;
@@ -679,7 +679,6 @@ async function loadFromSheets(){
       D.agents[name].toimisto=row['Toimisto']||D.agents[name].toimisto;
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].vauhti=parseFinNum(row['Vauhti']);
-      D.agents[name].tavoite=parseFinNum(row['Tavoite'])||D.agents[name].tavoite||0;
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
     csvRows(t2).forEach(row=>{
