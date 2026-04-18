@@ -706,9 +706,12 @@ async function loadFromSheets(){
       const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     const cur=preselect||sel.value||'';
-    sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}">${n}</option>`).join('');
+    const agentNames=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi'));
+    sel.innerHTML=agentNames.map(n=>`<option value="${n}">${n}</option>`).join('');
+    console.log('loadFromSheets done. preselect=',preselect,'cur=',cur,'agentCount=',agentNames.length,'hasAgent=',agentNames.includes(cur));
     if(cur)sel.value=cur;
     if(sel.value)loadAgent();
+    else console.warn('sel.value empty after setting cur=',cur);
   }catch(e){
     console.warn('Sheets-data ei saatavilla, käytetään tallennettua dataa.',e);
   }
