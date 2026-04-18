@@ -605,8 +605,9 @@ async function loadFromSheets(){
       D.agents[name].tapaamiset=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].tapaamiset_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
-    const cur=sel.value;
-    sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+    const cur=sel.value||preselect||'';
+    sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}">${n}</option>`).join('');
+    if(cur)sel.value=cur;
     if(sel.value)loadAgent();
   }catch(e){
     console.warn('Sheets-data ei saatavilla, käytetään tallennettua dataa.',e);
