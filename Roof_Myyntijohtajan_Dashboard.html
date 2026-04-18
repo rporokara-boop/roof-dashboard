@@ -1031,13 +1031,14 @@ function csvRows(text){const lines=text.trim().split('\n');let hi=0;for(let i=0;
 
 async function loadFromSheets(){
   try{
-    const [t1,t2,t3,t4,t5,t6]=await Promise.all([
+    const [t1,t2,t3,t4,t5,t6,t7]=await Promise.all([
       fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1332606454'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1321415806'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'37348123'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text())
+      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'454896708'+'&t='+Date.now()).then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
@@ -1060,6 +1061,10 @@ async function loadFromSheets(){
       D.agents[name].naytot_kauppa=parseFinNum(row['Monta näyttöä per kauppa'])||null;
       D.agents[name].ag_palkkio=parseFinNum(row['Keskipalkkio'])||null;
       D.agents[name].tap_arvo=parseFinNum(row['Tapaamisen arvo €'])||null;
+      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
+    });
+    csvRows(t7).forEach(row=>{
+      const name=row['Välittäjä'];if(!D.agents[name])return;
       const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     // Aggregate per-office totals from agents

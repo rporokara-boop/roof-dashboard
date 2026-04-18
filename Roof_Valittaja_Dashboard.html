@@ -668,10 +668,11 @@ function csvRows(text){
 
 async function loadFromSheets(){
   try{
-    const [t1,t2,t3]=await Promise.all([
+    const [t1,t2,t3,t4]=await Promise.all([
       fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text())
+      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'454896708'+'&t='+Date.now()).then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
@@ -696,6 +697,10 @@ async function loadFromSheets(){
       D.agents[name].naytot_kauppa=parseFinNum(row['Monta näyttöä per kauppa'])||null;
       D.agents[name].keskipalkkio=parseFinNum(row['Keskipalkkio'])||null;
       D.agents[name].tap_arvo=parseFinNum(row['Tapaamisen arvo €'])||null;
+      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
+    });
+    csvRows(t4).forEach(row=>{
+      const name=row['Välittäjä'];if(!D.agents[name])return;
       const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     const cur=sel.value||preselect||'';
