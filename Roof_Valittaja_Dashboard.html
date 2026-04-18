@@ -295,7 +295,19 @@ function checkAuth(){
     </div>
 
     <!-- KONVERSIOTILASTOT -->
-    <div id="convSection"></div>
+    <div id="convSection">
+      <div id="roofLoader" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0;gap:14px">
+        <svg width="52" height="30" viewBox="0 0 170 98" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+          <polygon points="85,0 170,49 170,98 85,73 0,98 0,49" fill="none" stroke="#28D1CD" stroke-width="6"/>
+          <polygon points="85,0 170,49 170,98 85,73 0,98 0,49" fill="#28D1CD"
+            style="clip-path:inset(100% 0 0 0);animation:roofFillUp 1.6s ease-in-out infinite alternate"/>
+        </svg>
+        <span style="color:rgba(255,255,255,0.35);font-size:.78rem;letter-spacing:.06em">Ladataan...</span>
+      </div>
+    </div>
+    <style>
+      @keyframes roofFillUp{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0% 0 0 0)}}
+    </style>
 
     <!-- ROW 1: Score + Successes + Development -->
     <div class="grid3">
@@ -497,7 +509,7 @@ function loadAgent(){
       cConvB=new Chart(document.getElementById('cvB'),{type:'doughnut',data:{datasets:[{data:[vauhtiPct,100-vauhtiPct],backgroundColor:['#003848','#e2e8f0'],borderWidth:0,hoverOffset:0}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},events:[]}});
     }
   } else {
-    cs.innerHTML='';
+    if(!document.getElementById('roofLoader')) cs.innerHTML='';
   }
 
   // ── SCORE CARD ──
