@@ -454,7 +454,7 @@ function loadAgent(){
     const vauhtiPct=kkTavoite>0?Math.min(100,Math.round((d.vauhti/12)/kkTavoite*100)):null;
     const KA_TAP_KAUPPA=22, KA_TAP_TOIMARI=45, KA_TOIMARI_KAUPPA=70;
     const fmtPct=v=>v!=null?v.toFixed(1)+'%':'—';
-    const diffLabel=(v,ka)=>{if(v==null)return '';const d=v-ka;return d>=0?`<span class="conv-vs-better">+${d.toFixed(1)} pp yli ka. ✓</span>`:`<span class="conv-vs-worse">${d.toFixed(1)} pp alle ka.</span>`;};
+    const diffLabel=(v,ka)=>{if(v==null)return '';const diff=v-ka;return diff>=0?`<span class="conv-vs-better">+${diff.toFixed(1)} pp yli ka. ✓</span>`:`<span class="conv-vs-worse">${diff.toFixed(1)} pp alle ka.</span>`;};
     cs.innerHTML=`<div class="conv-section">
       <div class="conv-section-title">📊 Omat konversiotilastot</div>
       ${(myyntiPct!=null||vauhtiPct!=null)?`
