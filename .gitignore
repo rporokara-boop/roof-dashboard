@@ -1,0 +1,11 @@
+# API-avaimet ja palvelinskriptit — EI GitHubiin
+kalenteri_server.js
+*_server.js
+.env
+*.env
+
+# Firebase
+.firebase/
+
+# macOS
+.DS_Store
