@@ -705,7 +705,7 @@ async function loadFromSheets(){
       const name=row['Välittäjä'];if(!D.agents[name])return;
       const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
-    const cur=sel.value||preselect||'';
+    const cur=preselect||sel.value||'';
     sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}">${n}</option>`).join('');
     if(cur)sel.value=cur;
     if(sel.value)loadAgent();
