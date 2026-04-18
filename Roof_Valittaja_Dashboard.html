@@ -238,7 +238,8 @@ function checkAuth(){
 }
 (function(){
   const t=localStorage.getItem('roof_auth');
-  if(t&&Date.now()-t<3600000)document.getElementById('auth-overlay').style.display='none';
+  const agentParam=new URLSearchParams(window.location.search).get('agent');
+  if(agentParam||(t&&Date.now()-t<3600000))document.getElementById('auth-overlay').style.display='none';
 })();
 </script>
 
@@ -389,7 +390,7 @@ if(preselect && agents[preselect]){
 
 // ── SHARE LINK ─────────────────────────────────────
 function updateShareUrl(name){
-  const url = window.location.href.split('?')[0]+'?agent='+encodeURIComponent(name);
+  const url = 'https://roof-dashboards-f8a4a.web.app/?agent='+encodeURIComponent(name);
   document.getElementById('shareUrl').textContent = url;
   document.getElementById('shareBanner').style.display = 'flex';
 }
