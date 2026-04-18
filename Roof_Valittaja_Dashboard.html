@@ -450,7 +450,7 @@ function loadAgent(){
   if(hasConv){
     const tavoite=d.tavoite||0;
     const myyntiPct=tavoite>0?Math.min(100,Math.round(d.myynti/tavoite*100)):null;
-    const vauhtiPct=tavoite>0?Math.min(100,Math.round(d.vauhti/(tavoite/12)*100)):null;
+    const vauhtiPct=tavoite>0?Math.min(100,Math.round(d.vauhti/tavoite*100)):null;
     const KA_TAP_KAUPPA=22, KA_TAP_TOIMARI=45, KA_TOIMARI_KAUPPA=70;
     const fmtPct=v=>v!=null?v.toFixed(1)+'%':'—';
     const diffLabel=(v,ka)=>{if(v==null)return '';const d=v-ka;return d>=0?`<span class="conv-vs-better">+${d.toFixed(1)} pp yli ka. ✓</span>`:`<span class="conv-vs-worse">${d.toFixed(1)} pp alle ka.</span>`;};
@@ -468,7 +468,7 @@ function loadAgent(){
           <div class="conv-pizza-title">Vauhti / kk-tavoite</div>
           <div class="conv-pizza-wrap"><canvas id="cvB"></canvas>
             <div class="conv-pizza-center"><div class="conv-pizza-val">${vauhtiPct!=null?vauhtiPct+'%':'—'}</div><div class="conv-pizza-sub">tavoitteesta</div></div></div>
-          <div class="conv-pizza-legend"><b>${fmtK(Math.round(d.vauhti))}</b> / ${fmtK(Math.round(tavoite/12))}</div>
+          <div class="conv-pizza-legend"><b>${fmtK(Math.round(d.vauhti))}</b> / ${fmtK(tavoite)} tavoite</div>
         </div>
       </div>`:''}
       ${d.tap_kauppa!=null?`<div class="conv-bar-row"><div class="conv-bar-label-row"><span class="conv-bar-name">Tapaaminen → Kauppa</span><span class="conv-bar-pct">${fmtPct(d.tap_kauppa)}</span></div><div class="conv-bar-track"><div class="conv-bar-fill" style="width:${Math.min(100,d.tap_kauppa/50*100)}%;background:#28D1CD"></div></div><div class="conv-vs-avg">Konserni ka. ${KA_TAP_KAUPPA}% — ${diffLabel(d.tap_kauppa,KA_TAP_KAUPPA)}</div></div>`:''}
