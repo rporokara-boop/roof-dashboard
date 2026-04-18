@@ -365,6 +365,7 @@ Object.keys(agents).sort((a,b)=>a.localeCompare(b,'fi')).forEach(n=>{
 });
 
 // ── URL PARAMS ─────────────────────────────────────
+let cConvA=null, cConvB=null;
 const params = new URLSearchParams(window.location.search);
 const preselect = params.get('agent');
 if(preselect && agents[preselect]){
@@ -387,7 +388,7 @@ function copyUrl(){
 }
 
 // ── CHART INSTANCES ────────────────────────────────
-let cScoreI=null, cMonthI=null, cDonutI=null, cConvA=null, cConvB=null;
+let cScoreI=null, cMonthI=null, cDonutI=null;
 function parsePct(s){if(!s||s==='-'||s==='')return null;return parseFloat(s.replace(',','.').replace('%','').trim())||null;}
 
 // ── HELPERS ────────────────────────────────────────
