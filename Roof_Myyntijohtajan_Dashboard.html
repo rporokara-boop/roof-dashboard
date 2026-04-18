@@ -203,7 +203,7 @@ input.search{width:240px}
 
   /* Agent table – horizontal scroll */
   .atbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .atbl{min-width:560px}
+  .atbl{min-width:820px}
 
   /* Benchmarking table – horizontal scroll */
   .bench-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -457,6 +457,7 @@ function checkAuth(){
       <thead><tr>
         <th>#</th><th>Välittäjä</th><th>Toimisto</th>
         <th>Myynti YTD</th><th>Vauhti/v</th><th>Tapaamiset</th>
+        <th>Tap→Kauppa%</th><th>Tap→Toimari%</th><th>Tap.arvo €</th><th>Keskim.palkkio</th>
         <th>Arvosana</th><th>NPS</th><th>Toimek.%</th>
         <th>Top onnistuminen</th><th>Kehitettävää</th>
       </tr></thead>
@@ -983,6 +984,8 @@ function renderAg(){
     const nb=d.nps?`<span class="nbadge" style="background:${npsBg};color:${npsC}">${d.nps}</span>`:'—';
     const succ=d.top_successes[0]?`<span class="tag s">${d.top_successes[0]}</span>`:'—';
     const dev=(d.top_failures[0]||d.top_developments[0])?`<span class="tag w">${d.top_failures[0]||d.top_developments[0]}</span>`:'—';
+    const pctCol=v=>v==null?'—':`<span style="font-weight:700;color:${v>=30?'#16a34a':v>=20?'#D97706':'#dc2626'}">${v.toFixed(1)}%</span>`;
+    const eurCell=v=>v==null?'—':`<span style="font-weight:700;color:var(--navy)">${Math.round(v).toLocaleString('fi-FI')} €</span>`;
     return `<tr>
       <td style="color:var(--muted);font-weight:600">${i+1}</td>
       <td style="font-weight:700">${name}</td>
@@ -990,6 +993,10 @@ function renderAg(){
       <td><b>${d.myynti>0?fmtK(Math.round(d.myynti)):'—'}</b></td>
       <td>${d.vauhti>0?fmtK(Math.round(d.vauhti)):'—'}</td>
       <td>${d.tapaamiset||'—'}</td>
+      <td>${pctCol(d.tap_kauppa)}</td>
+      <td>${pctCol(d.tap_toimari)}</td>
+      <td>${eurCell(d.tap_arvo)}</td>
+      <td>${eurCell(d.ag_palkkio)}</td>
       <td>${sc}</td><td>${nb}</td>
       <td>${d.asked_pct>0?d.asked_pct+'%':'—'}</td>
       <td>${succ}</td><td>${dev}</td>
@@ -1018,17 +1025,19 @@ function buildRankings(){
 const SHEETS_BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vQOnFcSaTUJDA9W4Dtd1NIXDNEiLxFCFLZ9acxyU14pgtu6T0l0tQu5vJh-3Bjf8YTrrwy38gcwpntS/pub?output=csv&gid=';
 const MONTHS=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
 function parseFinNum(s){if(!s||s==='-'||s==='')return 0;return parseFloat(s.replace(/\./g,'').replace(',','.').replace(/[€\s]/g,''))||0;}
+function parsePct(s){if(!s||s==='-'||s==='')return null;return parseFloat(s.replace(',','.').replace('%','').trim())||null;}
 function parseCSVRow(line){const r=[];let c='';let q=false;for(let i=0;i<line.length;i++){if(line[i]==='"'){q=!q;}else if(line[i]===','&&!q){r.push(c);c='';}else c+=line[i];}r.push(c);return r.map(v=>v.trim());}
 function csvRows(text){const lines=text.trim().split('\n');let hi=0;for(let i=0;i<Math.min(5,lines.length);i++){if(lines[i].includes('Välittäjä')){hi=i;break;}}const hdrs=parseCSVRow(lines[hi]);return lines.slice(hi+1).map(l=>{const v=parseCSVRow(l);const row={};hdrs.forEach((h,i)=>row[h]=v[i]||'');return row;}).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Välittäjä'&&r['Välittäjä']!=='-');}
 
 async function loadFromSheets(){
   try{
-    const [t1,t2,t3,t4,t5]=await Promise.all([
+    const [t1,t2,t3,t4,t5,t6]=await Promise.all([
       fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1332606454'+'&t='+Date.now()).then(r=>r.text()),
       fetch(SHEETS_BASE+'1321415806'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'37348123'+'&t='+Date.now()).then(r=>r.text())
+      fetch(SHEETS_BASE+'37348123'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
@@ -1037,11 +1046,22 @@ async function loadFromSheets(){
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].vauhti=parseFinNum(row['Vauhti']);
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
+      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     csvRows(t2).forEach(row=>{
       const name=row['Välittäjä'];if(!D.agents[name])return;
       D.agents[name].tapaamiset=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].tapaamiset_monthly=MONTHS.map(m=>parseFinNum(row[m]));
+    });
+    csvRows(t6).forEach(row=>{
+      const name=row['Välittäjä'];if(!D.agents[name])return;
+      D.agents[name].tap_kauppa=parsePct(row['Tapaamisesta kauppa % kum']);
+      D.agents[name].tap_toimari=parsePct(row['Tapaamisesta toimari % kum']);
+      D.agents[name].toimari_kauppa=parsePct(row['Toimarista kauppa % kum']);
+      D.agents[name].naytot_kauppa=parseFinNum(row['Monta näyttöä per kauppa'])||null;
+      D.agents[name].ag_palkkio=parseFinNum(row['Keskipalkkio'])||null;
+      D.agents[name].tap_arvo=parseFinNum(row['Tapaamisen arvo €'])||null;
+      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     // Aggregate per-office totals from agents
     const offAgg={};

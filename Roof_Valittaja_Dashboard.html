@@ -84,6 +84,31 @@ body{font-family:'Aventa','Aventa W05 Regular','AventaW05-Regular',sans-serif;ba
 .cmp-line{display:flex;align-items:center;gap:7px}
 .cmp-bar{height:7px;border-radius:4px;min-width:3px}
 .cmp-val{font-size:.73rem;font-weight:700;white-space:nowrap}
+/* ── KONVERSIOTILASTOT ── */
+.conv-section{background:white;border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+.conv-section-title{font-size:.82rem;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.conv-pizza-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.conv-pizza-box{background:#f8fafc;border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.conv-pizza-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:center}
+.conv-pizza-wrap{position:relative;width:100px;height:100px}
+.conv-pizza-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:100%}
+.conv-pizza-val{font-size:1.05rem;font-weight:900;color:var(--navy);line-height:1.1}
+.conv-pizza-sub{font-size:.6rem;color:var(--muted);font-weight:600}
+.conv-pizza-legend{font-size:.67rem;color:var(--muted);text-align:center}
+.conv-pizza-legend b{color:var(--navy)}
+.conv-bar-row{display:flex;flex-direction:column;gap:3px;margin-bottom:11px}
+.conv-bar-label-row{display:flex;justify-content:space-between;align-items:center}
+.conv-bar-name{font-size:.75rem;font-weight:700;color:var(--text)}
+.conv-bar-pct{font-size:.75rem;font-weight:800;color:var(--navy)}
+.conv-bar-track{height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.conv-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.conv-vs-avg{font-size:.65rem;color:var(--muted);margin-top:1px}
+.conv-vs-better{color:#16a34a;font-weight:700}
+.conv-vs-worse{color:#dc2626;font-weight:700}
+.conv-kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:14px}
+.conv-kpi{background:#f0fdfc;border-radius:9px;padding:11px;text-align:center}
+.conv-kpi-val{font-size:1.1rem;font-weight:900;color:var(--navy)}
+.conv-kpi-label{font-size:.65rem;font-weight:600;color:var(--muted);margin-top:2px}
 
 /* TREND */
 .month-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin:10px 0}
@@ -172,6 +197,10 @@ body{font-family:'Aventa','Aventa W05 Regular','AventaW05-Regular',sans-serif;ba
 
   /* Bar labels shorter */
   .fb-label{min-width:80px}
+
+  /* Konversio pizza compacti */
+  .conv-pizza-wrap{width:82px;height:82px}
+  .conv-kpi-row{grid-template-columns:1fr 1fr}
 
   /* Comments text */
   .comment{font-size:.75rem}
@@ -264,6 +293,9 @@ function checkAuth(){
       </div>
     </div>
 
+    <!-- KONVERSIOTILASTOT -->
+    <div id="convSection"></div>
+
     <!-- ROW 1: Score + Successes + Development -->
     <div class="grid3">
       <div class="card">
@@ -355,7 +387,8 @@ function copyUrl(){
 }
 
 // ── CHART INSTANCES ────────────────────────────────
-let cScoreI=null, cMonthI=null, cDonutI=null;
+let cScoreI=null, cMonthI=null, cDonutI=null, cConvA=null, cConvB=null;
+function parsePct(s){if(!s||s==='-'||s==='')return null;return parseFloat(s.replace(',','.').replace('%','').trim())||null;}
 
 // ── HELPERS ────────────────────────────────────────
 function fmtK(n){ return n>=1000?(n/1000).toFixed(0)+' k€':n+'€' }
@@ -408,6 +441,54 @@ function loadAgent(){
   document.getElementById('hNps').textContent = d.nps||'—';
   document.getElementById('hNps').style.color = d.nps?npsCol(d.nps):'rgba(255,255,255,.5)';
   document.getElementById('hAsked').textContent = d.asked_pct>0?d.asked_pct+'%':'—';
+
+  // ── KONVERSIOTILASTOT ──
+  if(cConvA){cConvA.destroy();cConvA=null;}
+  if(cConvB){cConvB.destroy();cConvB=null;}
+  const cs=document.getElementById('convSection');
+  const hasConv=d.tap_kauppa!=null||d.tap_toimari!=null||d.tavoite!=null;
+  if(hasConv){
+    const tavoite=d.tavoite||0;
+    const myyntiPct=tavoite>0?Math.min(100,Math.round(d.myynti/tavoite*100)):null;
+    const vauhtiPct=tavoite>0?Math.min(100,Math.round(d.vauhti/(tavoite/12)*100)):null;
+    const KA_TAP_KAUPPA=22, KA_TAP_TOIMARI=45, KA_TOIMARI_KAUPPA=70;
+    const fmtPct=v=>v!=null?v.toFixed(1)+'%':'—';
+    const diffLabel=(v,ka)=>{if(v==null)return '';const d=v-ka;return d>=0?`<span class="conv-vs-better">+${d.toFixed(1)} pp yli ka. ✓</span>`:`<span class="conv-vs-worse">${d.toFixed(1)} pp alle ka.</span>`;};
+    cs.innerHTML=`<div class="conv-section">
+      <div class="conv-section-title">📊 Omat konversiotilastot</div>
+      ${(myyntiPct!=null||vauhtiPct!=null)?`
+      <div class="conv-pizza-row">
+        <div class="conv-pizza-box">
+          <div class="conv-pizza-title">Kumulatiivinen myynti</div>
+          <div class="conv-pizza-wrap"><canvas id="cvA"></canvas>
+            <div class="conv-pizza-center"><div class="conv-pizza-val">${myyntiPct!=null?myyntiPct+'%':'—'}</div><div class="conv-pizza-sub">tavoitteesta</div></div></div>
+          <div class="conv-pizza-legend"><b>${fmtK(Math.round(d.myynti))}</b> / ${fmtK(tavoite)}</div>
+        </div>
+        <div class="conv-pizza-box">
+          <div class="conv-pizza-title">Vauhti / kk-tavoite</div>
+          <div class="conv-pizza-wrap"><canvas id="cvB"></canvas>
+            <div class="conv-pizza-center"><div class="conv-pizza-val">${vauhtiPct!=null?vauhtiPct+'%':'—'}</div><div class="conv-pizza-sub">tavoitteesta</div></div></div>
+          <div class="conv-pizza-legend"><b>${fmtK(Math.round(d.vauhti))}</b> / ${fmtK(Math.round(tavoite/12))}</div>
+        </div>
+      </div>`:''}
+      ${d.tap_kauppa!=null?`<div class="conv-bar-row"><div class="conv-bar-label-row"><span class="conv-bar-name">Tapaaminen → Kauppa</span><span class="conv-bar-pct">${fmtPct(d.tap_kauppa)}</span></div><div class="conv-bar-track"><div class="conv-bar-fill" style="width:${Math.min(100,d.tap_kauppa/50*100)}%;background:#28D1CD"></div></div><div class="conv-vs-avg">Konserni ka. ${KA_TAP_KAUPPA}% — ${diffLabel(d.tap_kauppa,KA_TAP_KAUPPA)}</div></div>`:''}
+      ${d.tap_toimari!=null?`<div class="conv-bar-row"><div class="conv-bar-label-row"><span class="conv-bar-name">Tapaaminen → Toimeksianto</span><span class="conv-bar-pct">${fmtPct(d.tap_toimari)}</span></div><div class="conv-bar-track"><div class="conv-bar-fill" style="width:${Math.min(100,d.tap_toimari/100*100)}%;background:#A09074"></div></div><div class="conv-vs-avg">Konserni ka. ${KA_TAP_TOIMARI}% — ${diffLabel(d.tap_toimari,KA_TAP_TOIMARI)}</div></div>`:''}
+      ${d.toimari_kauppa!=null?`<div class="conv-bar-row"><div class="conv-bar-label-row"><span class="conv-bar-name">Toimeksianto → Kauppa</span><span class="conv-bar-pct">${fmtPct(d.toimari_kauppa)}</span></div><div class="conv-bar-track"><div class="conv-bar-fill" style="width:${Math.min(100,d.toimari_kauppa/150*100)}%;background:#16a34a"></div></div><div class="conv-vs-avg">Konserni ka. ${KA_TOIMARI_KAUPPA}% — ${diffLabel(d.toimari_kauppa,KA_TOIMARI_KAUPPA)}</div></div>`:''}
+      <div class="conv-kpi-row">
+        ${d.naytot_kauppa!=null?`<div class="conv-kpi"><div class="conv-kpi-val">${d.naytot_kauppa}</div><div class="conv-kpi-label">Näyttöä / kauppa</div></div>`:''}
+        ${d.tap_arvo!=null?`<div class="conv-kpi"><div class="conv-kpi-val" style="color:var(--teal)">${Math.round(d.tap_arvo).toLocaleString('fi-FI')} €</div><div class="conv-kpi-label">Tapaamisen arvo</div></div>`:''}
+        ${d.keskipalkkio!=null?`<div class="conv-kpi"><div class="conv-kpi-val">${Math.round(d.keskipalkkio).toLocaleString('fi-FI')} €</div><div class="conv-kpi-label">Keskipalkkio</div></div>`:''}
+      </div>
+    </div>`;
+    if(myyntiPct!=null){
+      cConvA=new Chart(document.getElementById('cvA'),{type:'doughnut',data:{datasets:[{data:[myyntiPct,100-myyntiPct],backgroundColor:['#28D1CD','#e2e8f0'],borderWidth:0,hoverOffset:0}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},events:[]}});
+    }
+    if(vauhtiPct!=null){
+      cConvB=new Chart(document.getElementById('cvB'),{type:'doughnut',data:{datasets:[{data:[vauhtiPct,100-vauhtiPct],backgroundColor:['#003848','#e2e8f0'],borderWidth:0,hoverOffset:0}]},options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},events:[]}});
+    }
+  } else {
+    cs.innerHTML='';
+  }
 
   // ── SCORE CARD ──
   document.getElementById('bigScore').textContent = d.avg_score>0?d.avg_score.toFixed(1):'—';
@@ -587,9 +668,10 @@ function csvRows(text){
 
 async function loadFromSheets(){
   try{
-    const [t1,t2]=await Promise.all([
+    const [t1,t2,t3]=await Promise.all([
       fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text())
+      fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
+      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
@@ -597,6 +679,7 @@ async function loadFromSheets(){
       D.agents[name].toimisto=row['Toimisto']||D.agents[name].toimisto;
       D.agents[name].myynti=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].vauhti=parseFinNum(row['Vauhti']);
+      D.agents[name].tavoite=parseFinNum(row['Tavoite'])||D.agents[name].tavoite||0;
       D.agents[name].myynti_monthly=MONTHS.map(m=>parseFinNum(row[m]));
     });
     csvRows(t2).forEach(row=>{
@@ -604,6 +687,17 @@ async function loadFromSheets(){
       if(!D.agents[name])return;
       D.agents[name].tapaamiset=parseFinNum(row['Kumulatiivinen']);
       D.agents[name].tapaamiset_monthly=MONTHS.map(m=>parseFinNum(row[m]));
+    });
+    csvRows(t3).forEach(row=>{
+      const name=row['Välittäjä'];
+      if(!D.agents[name])return;
+      D.agents[name].tap_kauppa=parsePct(row['Tapaamisesta kauppa % kum']);
+      D.agents[name].tap_toimari=parsePct(row['Tapaamisesta toimari % kum']);
+      D.agents[name].toimari_kauppa=parsePct(row['Toimarista kauppa % kum']);
+      D.agents[name].naytot_kauppa=parseFinNum(row['Monta näyttöä per kauppa'])||null;
+      D.agents[name].keskipalkkio=parseFinNum(row['Keskipalkkio'])||null;
+      D.agents[name].tap_arvo=parseFinNum(row['Tapaamisen arvo €'])||null;
+      const tav=parseFinNum(row['Tavoite']);if(tav>0)D.agents[name].tavoite=tav;
     });
     const cur=sel.value||preselect||'';
     sel.innerHTML=Object.keys(D.agents).sort((a,b)=>a.localeCompare(b,'fi')).map(n=>`<option value="${n}">${n}</option>`).join('');
