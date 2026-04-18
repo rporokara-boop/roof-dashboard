@@ -669,11 +669,12 @@ function csvRows(text){
 
 async function loadFromSheets(){
   try{
+    const safe=url=>fetch(url).then(r=>r.text()).catch(()=>'');
     const [t1,t2,t3,t4]=await Promise.all([
-      fetch(SHEETS_BASE+'1703238765'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'1973988137'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'1979538260'+'&t='+Date.now()).then(r=>r.text()),
-      fetch(SHEETS_BASE+'454896708'+'&t='+Date.now()).then(r=>r.text())
+      safe(SHEETS_BASE+'1703238765'+'&t='+Date.now()),
+      safe(SHEETS_BASE+'1973988137'+'&t='+Date.now()),
+      safe(SHEETS_BASE+'1979538260'+'&t='+Date.now()),
+      safe(SHEETS_BASE+'454896708'+'&t='+Date.now())
     ]);
     csvRows(t1).forEach(row=>{
       const name=row['Välittäjä'];
