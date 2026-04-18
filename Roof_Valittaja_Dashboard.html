@@ -374,6 +374,14 @@ const CAT_COLORS = {
 const MONTHS=['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
 const params = new URLSearchParams(window.location.search);
 const preselect = params.get('agent');
+if(preselect){
+  // Lukittu yhden välittäjän näkymä — piilotetaan dropdown
+  const hdrSel=document.querySelector('.hdr-sel');
+  if(hdrSel)hdrSel.style.display='none';
+  // Lisätään nimi otsikkoon
+  const logoText=document.querySelector('.logo-text');
+  if(logoText)logoText.insertAdjacentHTML('beforeend',` <span style="color:rgba(255,255,255,.5);font-size:.82rem;font-weight:400">— ${preselect}</span>`);
+}
 if(preselect && agents[preselect]){
   sel.value = preselect;
   loadAgent();
