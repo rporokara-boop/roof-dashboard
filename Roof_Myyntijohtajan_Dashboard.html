@@ -1616,7 +1616,7 @@ function yhtCalcData(){
     tap:yhtMode==='kumul'?(a.tapaamiset||idxs.reduce((s,i)=>s+((a.tapaamiset_monthly||[])[i]||0),0)):idxs.reduce((s,i)=>s+((a.tapaamiset_monthly||[])[i]||0),0),
     nps:a.nps||0,avg_score:a.avg_score||0,asked_pct:a.asked_pct||0,
     tap_kauppa:a.tap_kauppa||null,toimari_kauppa:a.toimari_kauppa||null,tap_toimari:a.tap_toimari||null,
-    tavoite:a.tavoite||null,naytot_kauppa:a.naytot_kauppa||null,tap_arvo:a.tap_arvo||null,
+    tavoite:a.tavoite||null,vauhti:a.vauhti||0,naytot_kauppa:a.naytot_kauppa||null,tap_arvo:a.tap_arvo||null,
     monthly:idxs.map(i=>({mo:MONTHS_SHORT[i],v:(a.myynti_monthly||[])[i]||0})),
   })).filter(a=>a.myynti>0).sort((a,b)=>b.myynti-a.myynti);
   const offMap={};
@@ -1659,7 +1659,7 @@ function generateRaporttiHtml(){
   const top3off=d.offices.slice(0,3).map(o=>o.name.split('/').pop().trim()).join(', ');
   const moGrowth=d.moTotals.length>1?Math.round((d.moTotals.at(-1).myynti-d.moTotals[0].myynti)/Math.max(1,d.moTotals[0].myynti)*100):0;
   const nps100=Object.entries(D.agents).filter(([,a])=>a.nps===100).map(([n])=>n.split(' ')[0]).slice(0,3).join(', ');
-  const onTarget=d.agents.filter(a=>a.tavoite&&a.tavoite>0&&a.myynti>=(a.tavoite*d.idxs.length/12));
+  const onTarget=d.agents.filter(a=>a.tavoite&&a.tavoite>0&&a.vauhti>0&&a.vauhti>=a.tavoite);
   const offTarget=d.agents.filter(a=>a.tavoite&&a.tavoite>0&&a.myynti<(a.tavoite*d.idxs.length/12));
   const avgTapKauppa=d.agents.filter(a=>a.tap_kauppa>0).reduce((s,a,_,arr)=>s+(a.tap_kauppa/arr.length),0)||0;
   const topTapKauppa=d.agents.filter(a=>a.tap_kauppa>0).sort((a,b)=>b.tap_kauppa-a.tap_kauppa)[0];
@@ -1681,7 +1681,7 @@ function generateRaporttiHtml(){
   const ydTav=yd.tavoite, ydTK=yd.tapkauppa, ydTmK=yd.toimarikauppa, ydNps=yd.nps, ydToimeks=yd.toimeks;
 
   const agRows=d.agents.slice(0,20).map((a,i)=>{
-    const tavPct=a.tavoite&&a.tavoite>0?Math.round(a.myynti/(a.tavoite*d.idxs.length/12)*100):null;
+    const tavPct=a.tavoite&&a.tavoite>0&&a.vauhti>0?Math.round(a.vauhti/a.tavoite*100):null;
     const tavColor=tavPct==null?muted:tavPct>=100?turq:tavPct>=80?'#D97706':'#f87171';
     const tavLabel=tavPct==null?'—':(tavPct>=100?'\u2713 ':'\u2717 ')+tavPct+'\u00a0%';
     const moCols=a.monthly.map(m=>`<td style="padding:6px 5px;text-align:right;font-size:11px;color:${muted}">${m.v>0?Math.round(m.v).toLocaleString('fi-FI'):'—'}</td>`).join('');
