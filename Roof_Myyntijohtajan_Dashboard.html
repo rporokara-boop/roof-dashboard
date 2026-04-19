@@ -302,6 +302,7 @@ function checkAuth(){
   <div class="nav-tab" onclick="showPage('trend',this)">📈 Trendi Tam–Maa</div>
   <div class="nav-tab" onclick="showPage('offices',this)">🏢 Toimistot</div>
   <div class="nav-tab" onclick="showPage('bench',this)">⚖️ Benchmarking</div>
+  <div class="nav-tab" onclick="showPage('kohteet',this)">📦 Kohteet</div>
   <div class="nav-tab" onclick="showPage('agents',this)">👤 Välittäjät</div>
   <div class="nav-tab" onclick="showPage('rankings',this)">🏆 Rankingt</div>
   <div class="nav-tab" onclick="showPage('palaveri',this)">📋 Palaveri</div>
@@ -392,17 +393,6 @@ function checkAuth(){
 <div class="page" id="page-offices">
   <div class="sh" style="margin-bottom:14px">Klikkaa toimistoa → avaa välittäjätaulukko</div>
   <div class="office-grid" id="officeGrid"></div>
-  <div class="card" style="margin-top:22px">
-    <div class="card-title" style="margin-bottom:4px">📦 Kohdemäärät verkossa — trendi per toimisto</div>
-    <div style="font-size:.75rem;color:var(--muted);margin-bottom:14px">Kohteet netissä kuun lopussa. Klikkaa legendaa piilottaaksesi/näyttääksesi toimiston.</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-      <button onclick="kohdeToogleAll(true)" style="padding:5px 12px;border-radius:8px;border:1.5px solid #003848;background:#003848;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit">Näytä kaikki</button>
-      <button onclick="kohdeToogleAll(false)" style="padding:5px 12px;border-radius:8px;border:1.5px solid var(--roof-border);background:#f0ede8;color:#003848;font-size:.72rem;font-weight:700;cursor:pointer;font-family:inherit">Piilota kaikki</button>
-      <label style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text);cursor:pointer"><input type="checkbox" id="kohdeKonserni" checked style="accent-color:#003848"> Konserni yhteensä</label>
-    </div>
-    <canvas id="cKohteet" height="120"></canvas>
-    <div id="kohdeStatus" style="font-size:.75rem;color:var(--muted);margin-top:8px;text-align:center">⏳ Ladataan kohdemääriä...</div>
-  </div>
   <div class="detail" id="detailPanel">
     <div class="detail-hd">
       <div class="detail-title" id="detailName"></div>
@@ -448,6 +438,38 @@ function checkAuth(){
       <div class="card-title">💰 Keskipalkkio vs. Klousaus%</div>
       <canvas id="cScatter" height="300"></canvas>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE: KOHTEET ═══════════ -->
+<div class="page" id="page-kohteet">
+  <div class="sh" style="margin-bottom:14px">Kohteet netissä kuun lopussa — trendi toimistoittain</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+    <select id="kohdeOfficeFilter" onchange="buildKohdeChart()" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--roof-border);font-size:.82rem;font-family:inherit;color:var(--text);background:#fff;cursor:pointer">
+      <option value="all">Kaikki toimistot + konserni</option>
+      <option value="_konserni">Konserni yhteensä</option>
+      <option value="Espoo">Espoo</option>
+      <option value="Helsinki">Helsinki</option>
+      <option value="Hyvinkää">Hyvinkää</option>
+      <option value="Järvenpää">Järvenpää</option>
+      <option value="Kymenlaakso">Kymenlaakso</option>
+      <option value="Pori">Pori</option>
+      <option value="Raasepori">Raasepori</option>
+      <option value="Salo">Salo</option>
+      <option value="Tampere">Tampere</option>
+      <option value="Turku">Turku</option>
+      <option value="Oulu">Oulu</option>
+    </select>
+    <button onclick="kohdeToggleAll(true)" style="padding:7px 14px;border-radius:8px;border:1.5px solid #003848;background:#003848;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">Näytä kaikki</button>
+    <button onclick="kohdeToggleAll(false)" style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--roof-border);background:#f0ede8;color:#003848;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit">Piilota kaikki</button>
+    <span id="kohdeStatus" style="font-size:.78rem;color:var(--muted)">⏳ Ladataan...</span>
+  </div>
+  <div class="card">
+    <canvas id="cKohteet" height="110"></canvas>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="margin-bottom:12px">📊 Kuukausittaiset luvut — taulukko</div>
+    <div style="overflow-x:auto"><table class="atbl" id="kohdeTable"><thead id="kohdeTableHead"></thead><tbody id="kohdeTableBody"></tbody></table></div>
   </div>
 </div>
 
@@ -705,7 +727,8 @@ function showPage(id, el){
   if(id==='pizza') buildPizzaOfficeButtons();
   if(id==='trend') buildTrend();
   if(id==='rankings') buildRankings();
-  if(id==='offices'){buildOfficeGrid();buildKohdeChart();}
+  if(id==='offices') buildOfficeGrid();
+  if(id==='kohteet') buildKohdeChart();
   if(id==='palaveri') initPalaveri();
   if(id==='yhteenvedot') initYhtMonthBtns();
 }
@@ -1184,11 +1207,12 @@ function renderAg(){
     const dev=(d.top_failures[0]||d.top_developments[0])?`<span class="tag w">${d.top_failures[0]||d.top_developments[0]}</span>`:'—';
     const pctCol=v=>v==null?'—':`<span style="font-weight:700;color:${v>=30?'#16a34a':v>=20?'#D97706':'#dc2626'}">${v.toFixed(1)}%</span>`;
     const eurCell=v=>v==null?'—':`<span style="font-weight:700;color:var(--navy)">${Math.round(v).toLocaleString('fi-FI')} €</span>`;
-    // Tavoitevauhti: myynti vs. pro-rated annual target for months elapsed
-    const curMonth=new Date().getMonth()+1;
+    // Tavoitevauhti: myynti vs. pro-rated target for months WITH DATA (not calendar month)
+    const dataMonths=d.myynti_monthly?d.myynti_monthly.filter(v=>v>0).length:0;
+    const usedMonths=dataMonths||1;
     let tavCell='—';
     if(d.tavoite>0&&d.myynti>0){
-      const expected=d.tavoite*(curMonth/12);
+      const expected=d.tavoite*(usedMonths/12);
       const pct=Math.round(d.myynti/expected*100);
       const col=pct>=100?'#16a34a':pct>=80?'#D97706':'#dc2626';
       const icon=pct>=100?'✓':pct>=80?'▲':'✗';
@@ -1232,68 +1256,73 @@ function buildRankings(){
 
 // ── KOHDEMÄÄRÄ CHART ──────────────────────────────
 const OFFICE_COLORS={
-  'Espoo':'#003848','Helsinki':'#28D1CD','Hyvinkää':'#D97706',
+  'Espoo':'#003848','Helsinki':'#0ea5e9','Hyvinkää':'#D97706',
   'Järvenpää':'#7c3aed','Kymenlaakso':'#dc2626','Pori':'#059669',
-  'Raasepori':'#0ea5e9','Salo':'#f59e0b','Tampere':'#ec4899',
-  'Turku':'#6366f1','Oulu':'#16a34a','_konserni':'#000000'
+  'Raasepori':'#f59e0b','Salo':'#a16207','Tampere':'#ec4899',
+  'Turku':'#6366f1','Oulu':'#16a34a','_konserni':'#28D1CD'
 };
+const KNOWN_OFFICES_K=['Espoo','Helsinki','Hyvinkää','Järvenpää','Kymenlaakso','Pori','Raasepori','Salo','Tampere','Turku','Oulu'];
 let kohdeChartInst=null;
 function buildKohdeChart(){
   const canvas=document.getElementById('cKohteet');
   const status=document.getElementById('kohdeStatus');
   if(!canvas) return;
-  if(!D.kohteet||Object.keys(D.kohteet).length===0){
-    if(status)status.textContent='⏳ Kohdemäärätietoja ei vielä ladattu...';return;
+  if(!D.kohteet||!Object.keys(D.kohteet).length){
+    if(status)status.textContent='⏳ Ladataan kohdemääriä...';return;
   }
-  const showKonserni=document.getElementById('kohdeKonserni')?.checked!==false;
+  const filter=(document.getElementById('kohdeOfficeFilter')||{}).value||'all';
   const availMonths=MONTHS.map((m,i)=>({m,i})).filter(({i})=>
-    Object.values(D.kohteet).some(arr=>arr[i]!=null)
+    Object.values(D.kohteet).some(arr=>Array.isArray(arr)&&arr[i]!=null)
   );
-  if(!availMonths.length){if(status)status.textContent='⚠️ Ei kohdemäärädataa saatavilla.';return;}
-  if(status)status.textContent='';
+  if(!availMonths.length){if(status)status.textContent='⚠️ Ei kohdemäärädataa.';return;}
+  if(status)status.textContent=`Dataa ${availMonths.length} kuukaudelta`;
   const labels=availMonths.map(({m})=>m.slice(0,3));
-  const KNOWN_OFFICES=['Espoo','Helsinki','Hyvinkää','Järvenpää','Kymenlaakso','Pori','Raasepori','Salo','Tampere','Turku','Oulu'];
-  const datasets=KNOWN_OFFICES.filter(o=>D.kohteet[o]&&D.kohteet[o].some(v=>v!=null)).map(o=>({
-    label:o,
-    data:availMonths.map(({i})=>D.kohteet[o][i]),
-    borderColor:OFFICE_COLORS[o],
-    backgroundColor:OFFICE_COLORS[o]+'22',
-    borderWidth:2,tension:.35,fill:false,pointRadius:4,spanGaps:true
-  }));
-  if(showKonserni&&D.kohteet['_konserni']&&D.kohteet['_konserni'].some(v=>v!=null)){
-    datasets.push({
-      label:'Konserni yhteensä',data:availMonths.map(({i})=>D.kohteet['_konserni'][i]),
-      borderColor:'#000',backgroundColor:'#00000011',borderWidth:3,
-      borderDash:[6,3],tension:.35,fill:false,pointRadius:5,spanGaps:true
-    });
+  let datasets=[];
+  if(filter==='all'||filter==='_konserni'){
+    if(D.kohteet['_konserni']&&D.kohteet['_konserni'].some(v=>v!=null)){
+      datasets.push({label:'Konserni yhteensä',data:availMonths.map(({i})=>D.kohteet['_konserni'][i]),
+        borderColor:OFFICE_COLORS['_konserni'],backgroundColor:OFFICE_COLORS['_konserni']+'22',
+        borderWidth:3,borderDash:filter==='all'?[6,3]:[],tension:.35,fill:false,pointRadius:5,spanGaps:true});
+    }
   }
-  if(kohdeChartInst){kohdeChartInst.destroy();kohdeChartInst=null;}
-  kohdeChartInst=new Chart(canvas,{
-    type:'line',
-    data:{labels,datasets},
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!=null?Math.round(ctx.parsed.y)+' kpl':'—'}`}}
-      },
-      scales:{
-        x:{grid:{color:'rgba(0,0,0,.05)'}},
-        y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>Math.round(v)+' kpl'}}
-      }
+  const offList=filter==='all'?KNOWN_OFFICES_K:(filter==='_konserni'?[]:([filter]));
+  offList.forEach(o=>{
+    if(D.kohteet[o]&&D.kohteet[o].some(v=>v!=null)){
+      datasets.push({label:o,data:availMonths.map(({i})=>D.kohteet[o][i]),
+        borderColor:OFFICE_COLORS[o],backgroundColor:OFFICE_COLORS[o]+'18',
+        borderWidth:2,tension:.35,fill:false,pointRadius:4,spanGaps:true});
     }
   });
+  if(kohdeChartInst){kohdeChartInst.destroy();kohdeChartInst=null;}
+  kohdeChartInst=new Chart(canvas,{type:'line',data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:true,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!=null?Math.round(ctx.parsed.y)+' kpl':'—'}`}}
+    },
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,.05)'}},
+      y:{beginAtZero:false,grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>Math.round(v)+' kpl'}}
+    }
+  }});
+  // Build table
+  const thead=document.getElementById('kohdeTableHead');
+  const tbody=document.getElementById('kohdeTableBody');
+  if(thead&&tbody){
+    const cols=filter==='all'?['_konserni',...KNOWN_OFFICES_K]:filter==='_konserni'?['_konserni']:[filter];
+    thead.innerHTML='<tr><th>Kuukausi</th>'+cols.map(o=>`<th>${o==='_konserni'?'Konserni':o}</th>`).join('')+'</tr>';
+    tbody.innerHTML=availMonths.map(({m,i})=>'<tr><td>'+m.slice(0,3)+'</td>'+cols.map(o=>{
+      const v=D.kohteet[o]?D.kohteet[o][i]:null;
+      return `<td>${v!=null?Math.round(v):'—'}</td>`;
+    }).join('')+'</tr>').join('');
+  }
 }
-function kohdeToogleAll(show){
+function kohdeToggleAll(show){
   if(!kohdeChartInst) return;
   kohdeChartInst.data.datasets.forEach((_,i)=>kohdeChartInst.setDatasetVisibility(i,show));
   kohdeChartInst.update();
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  const cb=document.getElementById('kohdeKonserni');
-  if(cb) cb.onchange=()=>buildKohdeChart();
-});
 
 // ── GOOGLE SHEETS LIVE DATA ───────────────────────
 const SHEETS_BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vQOnFcSaTUJDA9W4Dtd1NIXDNEiLxFCFLZ9acxyU14pgtu6T0l0tQu5vJh-3Bjf8YTrrwy38gcwpntS/pub?output=csv&gid=';
@@ -1346,33 +1375,34 @@ async function loadFromSheets(){
     // Parse kohdemäärät (GID 791295824) — monthly "Kohteet netissä" per office
     if(t8){
       const lines=t8.split('\n');
-      const KNOWN_OFFICES=['Espoo','Helsinki','Hyvinkää','Järvenpää','Kymenlaakso','Pori','Raasepori','Salo','Tampere','Turku','Oulu'];
-      let curMonth=-1;
-      let hdrCols=[];
+      let curMonth=-1, hdrCols=[];
       D.kohteet={};
-      KNOWN_OFFICES.forEach(o=>D.kohteet[o]=Array(12).fill(null));
+      KNOWN_OFFICES_K.forEach(o=>D.kohteet[o]=Array(12).fill(null));
       D.kohteet['_konserni']=Array(12).fill(null);
       for(let i=0;i<lines.length;i++){
-        const cells=lines[i].split(',').map(c=>c.replace(/^"|"$/g,'').trim());
+        const cells=parseCSVRow(lines[i]);
         const first=cells[0];
-        // Detect month header row
         const mi=MONTHS.indexOf(first);
-        if(mi>=0){curMonth=mi;hdrCols=[];continue;}
-        // Detect column header row for current month
-        if(curMonth>=0&&!hdrCols.length&&cells.includes('Kohteet netissä')){
-          hdrCols=cells;continue;
+        if(mi>=0){
+          curMonth=mi;
+          // Tammikuu has headers on the SAME row as the month name
+          if(cells.includes('Kohteet netissä')) hdrCols=cells;
+          else hdrCols=[];
+          continue;
         }
-        // Data row
-        if(curMonth>=0&&hdrCols.length){
-          const offName=first;
-          if(offName==='Toteuma yhteensä'){
-            const ki=hdrCols.indexOf('Kohteet netissä');
-            if(ki>=0){const v=parseFloat((cells[ki]||'').replace(',','.'));if(v>0)D.kohteet['_konserni'][curMonth]=v;}
-            hdrCols=[];curMonth=-1;continue;
-          }
-          if(KNOWN_OFFICES.includes(offName)){
-            const ki=hdrCols.indexOf('Kohteet netissä');
-            if(ki>=0){const v=parseFloat((cells[ki]||'').replace(',','.'));if(v>0)D.kohteet[offName][curMonth]=v;}
+        // Header row for subsequent months (first cell empty, contains 'Kohteet netissä')
+        if(curMonth>=0&&!hdrCols.length&&cells.includes('Kohteet netissä')){
+          hdrCols=cells; continue;
+        }
+        if(curMonth>=0&&hdrCols.length&&first){
+          const ki=hdrCols.indexOf('Kohteet netissä');
+          if(ki<0) continue;
+          const v=parseFinNum(cells[ki]);
+          if(first==='Toteuma yhteensä'){
+            if(v>0) D.kohteet['_konserni'][curMonth]=v;
+            hdrCols=[];curMonth=-1;
+          } else if(KNOWN_OFFICES_K.includes(first)&&v>0){
+            D.kohteet[first][curMonth]=v;
           }
         }
       }
@@ -1448,7 +1478,8 @@ async function loadFromSheets(){
     else if(activeId==='trend') buildTrend();
     else if(activeId==='bench') buildBench();
     else if(activeId==='rankings'){document.getElementById('rSales').innerHTML='';buildRankings();}
-    else if(activeId==='offices'){buildOfficeGrid();buildKohdeChart();}
+    else if(activeId==='offices') buildOfficeGrid();
+    else if(activeId==='kohteet') buildKohdeChart();
     // Always refresh overview KPIs
     if(typeof buildOverview==='function') buildOverview();
     // Rebuild pizza if an office was already selected
