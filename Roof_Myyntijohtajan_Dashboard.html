@@ -1445,13 +1445,17 @@ async function loadFromSheets(){
     });
     // Aggregate toimeksiannot, kaupat, näytöt per office
     const offToimarit={},offKaupat={},offNaytot={};
+    const offToimaritM={},offKaupatM={},offNaytotM={};
     [t3,t4,t5].forEach((txt,idx)=>{
       const agg=idx===0?offToimarit:idx===1?offKaupat:offNaytot;
+      const aggM=idx===0?offToimaritM:idx===1?offKaupatM:offNaytotM;
       const agField=idx===0?'toimeksiannot':idx===1?'kaupat':'naytot';
       csvRows(txt).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Tiimi').forEach(row=>{
         const o=row['Toimisto'];if(!o)return;
         const v=parseFinNum(row['Kumulatiivinen']);
         agg[o]=(agg[o]||0)+v;
+        if(!aggM[o])aggM[o]=Array(12).fill(0);
+        MONTHS.forEach((mo,mi)=>{const mv=parseFinNum(row[mo]);if(mv>0)aggM[o][mi]+=mv;});
         // Also store per-välittäjä
         const name=row['Välittäjä'];
         if(D.agents[name]&&v>0) D.agents[name][agField]=(D.agents[name][agField]||0)+v;
@@ -1477,6 +1481,9 @@ async function loadFromSheets(){
         if(!D.office_monthly[o])D.office_monthly[o]={myynti:Array(12).fill(0),tapaamiset:Array(12).fill(0)};
         D.office_monthly[o].myynti=offAgg[o].mMyynti;
         D.office_monthly[o].tapaamiset=offAgg[o].mTap;
+        if(offToimaritM[o])D.office_monthly[o].toimeksiannot=offToimaritM[o];
+        if(offKaupatM[o])D.office_monthly[o].kaupat=offKaupatM[o];
+        if(offNaytotM[o])D.office_monthly[o].naytot=offNaytotM[o];
       }
     });
     // Update overview charts in-place
@@ -1643,9 +1650,9 @@ function yhtCalcData(){
       myynti:idxs.map(i=>om?.myynti?.[i]||0),
       tapaamiset:idxs.map(i=>om?.tapaamiset?.[i]||0),
       kohteet:idxs.map(i=>kd?.[i]??null),
-      kaupat:od.kaupat||null,
-      naytot:od.naytot||null,
-      toimeksiannot:od.toimarit||null,
+      kaupat:om?.kaupat?idxs.map(i=>om.kaupat[i]||0):null,
+      naytot:om?.naytot?idxs.map(i=>om.naytot[i]||0):null,
+      toimeksiannot:om?.toimeksiannot?idxs.map(i=>om.toimeksiannot[i]||0):null,
     };
   });
   return{agents,offices,moTotals,totMyynti,totTap,jaksotxt,idxs,offMonthly};
@@ -1742,11 +1749,9 @@ function _rMoV(){
   tb.innerHTML=offices.map(o=>{
     const om=_OM[o]||{};
     let vals,tot;
-    if(_moM==='kaupat'){vals=Array(_MOS.length).fill(null);tot=om.kaupat!=null?Math.round(om.kaupat):null;}
-    else if(_moM==='naytot'){vals=Array(_MOS.length).fill(null);tot=om.naytot!=null?Math.round(om.naytot):null;}
-    else if(_moM==='toimeksiannot'){vals=Array(_MOS.length).fill(null);tot=om.toimeksiannot!=null?Math.round(om.toimeksiannot):null;}
-    else{vals=(om[_moM]||[]);tot=vals.reduce((s,v)=>s+(v||0),0);}
-    const totFmt=isEur?(tot!=null?_fK(tot):'—'):tot!=null?tot:'—';
+    if(Array.isArray(om[_moM])){vals=(om[_moM]||[]);tot=vals.reduce((s,v)=>s+(v||0),0);}
+    else{vals=[];tot=null;}
+    const totFmt=isEur?(tot!=null?_fK(tot):'—'):tot!=null?Math.round(tot):'—';
     const vFmt=v=>vals===null||v==null?'—':isEur?_fK(v):Math.round(v)||'—';
     return \`<tr style="border-bottom:1px solid ${bdr}"><td style="padding:7px 10px 7px 0;font-size:13px;color:${fg};font-weight:600">\${o}</td>\${vals!=null&&vals.length>0?vals.map(v=>\`<td style="padding:7px 8px;text-align:right;font-size:13px;color:${fg}">\${vFmt(v)}</td>\`).join(''):\`<td colspan="\${_MOS.length}" style="text-align:center;font-size:11px;color:${muted};padding:7px">vain yhteensä saatavilla</td>\`}<td style="padding:7px 0 7px 8px;text-align:right;font-size:13px;font-weight:700;color:${turq}">\${totFmt}</td></tr>\`;
   }).join('');
