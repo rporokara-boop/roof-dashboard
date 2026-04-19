@@ -1582,8 +1582,8 @@ function yhtCalcData(){
   const jaksotxt=idxs.map(i=>MONTHS_SHORT[i]).join(', ');
   const agents=Object.entries(D.agents).map(([nimi,a])=>({
     nimi,toimisto:a.toimisto||'',
-    myynti:idxs.reduce((s,i)=>s+((a.myynti_monthly||[])[i]||0),0),
-    tap:idxs.reduce((s,i)=>s+((a.tapaamiset_monthly||[])[i]||0),0),
+    myynti:yhtMode==='kumul'?(a.myynti||idxs.reduce((s,i)=>s+((a.myynti_monthly||[])[i]||0),0)):idxs.reduce((s,i)=>s+((a.myynti_monthly||[])[i]||0),0),
+    tap:yhtMode==='kumul'?(a.tapaamiset||idxs.reduce((s,i)=>s+((a.tapaamiset_monthly||[])[i]||0),0)):idxs.reduce((s,i)=>s+((a.tapaamiset_monthly||[])[i]||0),0),
     nps:a.nps||0,avg_score:a.avg_score||0,asked_pct:a.asked_pct||0,
     tap_kauppa:a.tap_kauppa||null,toimari_kauppa:a.toimari_kauppa||null,tap_toimari:a.tap_toimari||null,
     tavoite:a.tavoite||null,naytot_kauppa:a.naytot_kauppa||null,tap_arvo:a.tap_arvo||null,
