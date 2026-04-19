@@ -571,6 +571,7 @@ function checkAuth(){
         <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--roof-border)"><input type="checkbox" id="yd-naytot" checked style="accent-color:#003848;width:15px;height:15px"> Näytöt (kpl)</label>
         <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--roof-border)"><input type="checkbox" id="yd-toimeksiannot" checked style="accent-color:#003848;width:15px;height:15px"> Toimeksiannot (kpl)</label>
         <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--roof-border)"><input type="checkbox" id="yd-movertailu" checked style="accent-color:#003848;width:15px;height:15px"> Kuukausivertailu toimistoittain</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--roof-border)"><input type="checkbox" id="yd-kohteet" checked style="accent-color:#003848;width:15px;height:15px"> Kohdemäärät trendi -dia</label>
         <label style="display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text);cursor:pointer;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid var(--roof-border)"><input type="checkbox" id="yd-johto" checked style="accent-color:#003848;width:15px;height:15px"> Johtopäätökset-dia</label>
       </div>
     </div>
@@ -1599,14 +1600,14 @@ function selectYhtMalli(el){
 }
 
 function yhtCheckAll(v){
-  ['yd-kuukausi','yd-toimistot','yd-valittajat','yd-tavoite','yd-tapkauppa','yd-toimarikauppa','yd-nps','yd-toimeks','yd-tapaamiset','yd-kaupat','yd-naytot','yd-toimeksiannot','yd-movertailu','yd-johto'].forEach(id=>{
+  ['yd-kuukausi','yd-toimistot','yd-valittajat','yd-tavoite','yd-tapkauppa','yd-toimarikauppa','yd-nps','yd-toimeks','yd-tapaamiset','yd-kaupat','yd-naytot','yd-toimeksiannot','yd-movertailu','yd-kohteet','yd-johto'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.checked=v;
   });
 }
 
 function getYhtData(){
   const g=id=>{ const el=document.getElementById(id); return el?el.checked:true; };
-  return {kuukausi:g('yd-kuukausi'),toimistot:g('yd-toimistot'),valittajat:g('yd-valittajat'),tavoite:g('yd-tavoite'),tapkauppa:g('yd-tapkauppa'),toimarikauppa:g('yd-toimarikauppa'),nps:g('yd-nps'),toimeks:g('yd-toimeks'),tapaamiset:g('yd-tapaamiset'),kaupat:g('yd-kaupat'),naytot:g('yd-naytot'),toimeksiannot:g('yd-toimeksiannot'),movertailu:g('yd-movertailu'),johto:g('yd-johto'),prompt:(document.getElementById('yhtPrompt')||{}).value||''};
+  return {kuukausi:g('yd-kuukausi'),toimistot:g('yd-toimistot'),valittajat:g('yd-valittajat'),tavoite:g('yd-tavoite'),tapkauppa:g('yd-tapkauppa'),toimarikauppa:g('yd-toimarikauppa'),nps:g('yd-nps'),toimeks:g('yd-toimeks'),tapaamiset:g('yd-tapaamiset'),kaupat:g('yd-kaupat'),naytot:g('yd-naytot'),toimeksiannot:g('yd-toimeksiannot'),movertailu:g('yd-movertailu'),kohteet:g('yd-kohteet'),johto:g('yd-johto'),prompt:(document.getElementById('yhtPrompt')||{}).value||''};
 }
 
 function yhtCalcData(){
@@ -1756,6 +1757,52 @@ function _rMoV(){
     return \`<tr style="border-bottom:1px solid ${bdr}"><td style="padding:7px 10px 7px 0;font-size:13px;color:${fg};font-weight:600">\${o}</td>\${vals!=null&&vals.length>0?vals.map(v=>\`<td style="padding:7px 8px;text-align:right;font-size:13px;color:${fg}">\${vFmt(v)}</td>\`).join(''):\`<td colspan="\${_MOS.length}" style="text-align:center;font-size:11px;color:${muted};padding:7px">vain yhteensä saatavilla</td>\`}<td style="padding:7px 0 7px 8px;text-align:right;font-size:13px;font-weight:700;color:${turq}">\${totFmt}</td></tr>\`;
   }).join('');
 }
+let _kSel='Koko konserni';
+function switchKohteet(v){_kSel=v;_drawKohteet();}
+function _drawKohteet(){
+  const el=document.getElementById('kohteetSvg');if(!el)return;
+  const n=_MOS.length;
+  let vals;
+  if(_kSel==='Koko konserni'){
+    vals=Array(n).fill(0);
+    let has=false;
+    Object.keys(_OM).forEach(function(o){
+      var kd=(_OM[o]||{}).kohteet||[];
+      kd.forEach(function(v,i){if(v!=null){vals[i]+=v;has=true;}});
+    });
+    if(!has)vals=[];
+  } else {
+    vals=((_OM[_kSel]||{}).kohteet||[]);
+  }
+  if(!vals||!vals.length){el.innerHTML='<p style="color:rgba(255,255,255,.3);text-align:center;padding:40px">Ei dataa valitulle toimistolle</p>';return;}
+  var W=820,H=280,pL=44,pR=24,pT=36,pB=44;
+  var iW=W-pL-pR,iH=H-pT-pB;
+  var validVals=vals.filter(function(v){return v!=null&&v>0;});
+  var maxV=validVals.length?Math.max.apply(null,validVals):1;
+  var xStep=n>1?iW/(n-1):0;
+  var pts=vals.map(function(v,i){return v!=null?{x:pL+i*xStep,y:pT+iH-(v/maxV)*iH,v:v}:null;});
+  var linePts=pts.filter(Boolean).map(function(p){return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ');
+  var c='#28D1CD';
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:100%;max-height:240px">';
+  [0,0.25,0.5,0.75,1].forEach(function(t){
+    var y=pT+iH*(1-t);
+    var lbl=Math.round(maxV*t);
+    svg+='<line x1="'+pL+'" y1="'+y.toFixed(1)+'" x2="'+(pL+iW)+'" y2="'+y.toFixed(1)+'" stroke="rgba(255,255,255,.07)" stroke-width="1"/>';
+    svg+='<text x="'+(pL-6)+'" y="'+(y+4).toFixed(1)+'" fill="rgba(255,255,255,.28)" font-size="9" text-anchor="end">'+lbl+'</text>';
+  });
+  if(linePts)svg+='<polyline points="'+linePts+'" fill="none" stroke="'+c+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  pts.forEach(function(p,i){
+    var x=(pL+i*xStep).toFixed(1);
+    var xBot=(pL+i*xStep).toFixed(1);
+    svg+='<text x="'+xBot+'" y="'+(H-pB+15)+'" fill="rgba(255,255,255,.38)" font-size="9" text-anchor="middle">'+_MOS[i]+'</text>';
+    if(p){
+      svg+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4.5" fill="'+c+'" stroke="rgba(0,0,0,.3)" stroke-width="1"/>';
+      svg+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y-10).toFixed(1)+'" fill="'+c+'" font-size="10.5" text-anchor="middle" font-weight="700">'+p.v+'</text>';
+    }
+  });
+  svg+='</svg>';
+  el.innerHTML=svg;
+}
 const _AD=${agJson};
 const _TM=${d.totMyynti};
 const _ydTav=${ydTav},_ydTap=${ydTap},_ydTK=${ydTK},_ydTmK=${ydTmK},_ydToim=${ydToimeks},_ydNps=${ydNps},_ydKp=${ydKaupat},_ydNy=${ydNaytot},_ydTx=${ydToimeksiannot};
@@ -1889,10 +1936,16 @@ ${yd.kuukausi?`<section class="slide"><img src="${logoSrc}" style="position:abso
 ${yd.toimistot?`<section class="slide"><img src="${logoSrc}" style="position:absolute;top:20px;left:36px;height:24px;opacity:.75;z-index:10" alt="Roof"><div class="ey">Toimistot</div><h2>Toimistojen <em>ranking</em></h2><div style="overflow-x:auto;flex:1"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums"><thead><tr><th style="width:22px"></th><th onclick="sortOff('name')" style="cursor:pointer;white-space:nowrap">Toimisto<span data-sn="oname" style="color:${turq}"></span></th><th onclick="sortOff('myynti')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 8px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Myynti<span data-sn="omyynti" style="color:${turq}"> ↓</span></th><th style="text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Osuus</th><th onclick="sortOff('tap')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Tap.<span data-sn="otap" style="color:${turq}"></span></th><th onclick="sortOff('tapk')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Tap→Kauppa%<span data-sn="otapk" style="color:${turq}"></span></th><th onclick="sortOff('toimarik')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Toimari→Kauppa%<span data-sn="otoimarik" style="color:${turq}"></span></th><th onclick="sortOff('kaupat')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Kaupat<span data-sn="okaupat" style="color:${turq}"></span></th><th onclick="sortOff('count')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Välitt.<span data-sn="ocount" style="color:${turq}"></span></th><th style="padding:0 0 8px 14px;border-bottom:1px solid rgba(40,209,205,.3)"></th></tr></thead><tbody id="offTbody">${offRows}</tbody><tfoot><tr style="border-top:1px solid rgba(40,209,205,.35)"><td colspan="2" style="padding:10px 0;font-size:13px;font-weight:800;color:${fg}">Yhteensä</td><td style="text-align:right;padding:10px 8px;font-size:13px;font-weight:800;color:${fg}">${fmtE(d.totMyynti)}</td><td style="text-align:right;padding:10px 8px;font-size:12px;color:${muted}">100\u00a0%</td><td style="text-align:right;padding:10px 8px;font-size:12px;color:${muted}">${d.totTap}</td><td colspan="4"></td></tr></tfoot></table></div></section>`:''}
 ${yd.valittajat?`<section class="slide"><img src="${logoSrc}" style="position:absolute;top:20px;left:36px;height:24px;opacity:.75;z-index:10" alt="Roof"><div class="ey">Välittäjät \u00b7 Top ${Math.min(20,d.agents.length)}</div><h2>Parhaat <em>myyjät</em></h2><div style="overflow-x:auto;flex:1"><table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums"><thead><tr><th style="width:20px"></th><th onclick="sortAg('nimi')" style="cursor:pointer;white-space:nowrap">Välittäjä<span data-sn="animi" style="color:${turq}"></span></th><th onclick="sortAg('toimisto')" style="cursor:pointer;white-space:nowrap">Toimisto<span data-sn="atoimisto" style="color:${turq}"></span></th><th onclick="sortAg('myynti')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 6px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Myynti<span data-sn="amyynti" style="color:${turq}"> ↓</span></th>${moHeaders}<th onclick="sortAg('tavoite')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Tavoite%<span data-sn="atavoite" style="color:${turq}"></span></th>${ydTap?'<th style="text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Tap.</th>':''}<th onclick="sortAg('tapk')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Tap→Kauppa<span data-sn="atapk" style="color:${turq}"></span></th><th onclick="sortAg('toimarik')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Toimari→Kauppa<span data-sn="atoimarik" style="color:${turq}"></span></th><th style="text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Toimeks%</th><th onclick="sortAg('score')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Arvosana<span data-sn="ascore" style="color:${turq}"></span></th><th onclick="sortAg('nps')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">NPS<span data-sn="anps" style="color:${turq}"></span></th>${ydKaupat?'<th onclick="sortAg(\'kaupat\')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:'+turqDk+';border-bottom:1px solid rgba(40,209,205,.3)">Kaupat<span data-sn="akaupat" style="color:${turq}"></span></th>':''  }${ydNaytot?'<th onclick="sortAg(\'naytot\')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 5px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:'+turqDk+';border-bottom:1px solid rgba(40,209,205,.3)">Näytöt<span data-sn="anaytot" style="color:${turq}"></span></th>':''  }${ydToimeksiannot?'<th onclick="sortAg(\'toimeksiannot\')" style="cursor:pointer;white-space:nowrap;text-align:right;padding:0 0 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:'+turqDk+';border-bottom:1px solid rgba(40,209,205,.3)">Toimeks.<span data-sn="atoimeksiannot" style="color:${turq}"></span></th>':''  }</tr></thead><tbody id="agTbody">${agRows}</tbody></table></div></section>`:''}
 ${yd.movertailu&&d.idxs.length>1?`<section class="slide"><img src="${logoSrc}" style="position:absolute;top:20px;left:36px;height:24px;opacity:.75;z-index:10" alt="Roof"><div class="ey">Toimistot · Kuukausikehitys</div><h2>Toimistokohtainen <em>vertailu</em></h2><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${['myynti','tapaamiset','kohteet','kaupat','naytot','toimeksiannot'].map(m=>`<button onclick="switchMoM('${m}')" data-mom="${m}" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${m==='myynti'?turq:'rgba(40,209,205,.3)'};background:${m==='myynti'?'rgba(40,209,205,.18)':'transparent'};color:${fg};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.08em">${{myynti:'Myynti',tapaamiset:'Tapaamiset',kohteet:'Kohteet netissä',kaupat:'Kaupat',naytot:'Näytöt',toimeksiannot:'Toimeksiannot'}[m]}</button>`).join('')}</div><div style="overflow-x:auto;flex:1"><table id="moVTable" style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums"><thead><tr><th style="padding:0 10px 8px 0;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Toimisto</th>${d.idxs.map(i=>`<th style="text-align:right;padding:0 8px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">${MONTHS_SHORT[i]}</th>`).join('')}<th style="text-align:right;padding:0 0 8px 8px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk};border-bottom:1px solid rgba(40,209,205,.3)">Yhteensä</th></tr></thead><tbody id="moVBody"></tbody></table></div></section>`:''}
+${(()=>{
+  const koffs=Object.keys(d.offMonthly||{}).filter(o=>(d.offMonthly[o].kohteet||[]).some(v=>v!=null));
+  if(!yd.kohteet||!koffs.length)return'';
+  const opts=['Koko konserni',...koffs].map(o=>`<option value="${o}">${o}</option>`).join('');
+  return `<section class="slide"><img src="${logoSrc}" style="position:absolute;top:20px;left:36px;height:24px;opacity:.75;z-index:10" alt="Roof"><div class="ey">Kohdemäärät · Trendi</div><h2>Kohteet netissä <em>kehitys</em></h2><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><label style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${turqDk}">Toimisto</label><select id="kohteetSel" onchange="switchKohteet(this.value)" style="padding:6px 12px;background:${card};border:1.5px solid rgba(40,209,205,.3);border-radius:8px;color:${fg};font-size:13px;font-family:inherit;outline:none;cursor:pointer">${opts}</select></div><div id="kohteetSvg" style="flex:1;min-height:0;display:flex;align-items:center"></div></section>`;
+})()}
 ${yd.johto?`<section class="slide"><img src="${logoSrc}" style="position:absolute;top:20px;left:36px;height:24px;opacity:.75;z-index:10" alt="Roof"><div class="ey">Johtopäätökset \u00b7 ${d.jaksotxt}</div><h2><em>Toimenpiteet</em> ja havainnot</h2><div style="display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center">${johtoItems}</div></section>`:''}
 </div>
 <div class="nav"><button onclick="mv(-1)">\u2190</button><button onclick="mv(1)">\u2192</button></div>
-<div class="cnt" id="cnt">1 / ${[yd.kuukausi,yd.toimistot,yd.valittajat,yd.movertailu&&d.idxs.length>1,yd.johto].filter(Boolean).length+1}</div>
+<div class="cnt" id="cnt">1 / ${[yd.kuukausi,yd.toimistot,yd.valittajat,yd.movertailu&&d.idxs.length>1,yd.kohteet&&Object.keys(d.offMonthly||{}).some(o=>(d.offMonthly[o].kohteet||[]).some(v=>v!=null)),yd.johto].filter(Boolean).length+1}</div>
 <button class="dl-main" onclick="dl()">&#8595; Lataa HTML</button>
 <script>
 const ss=document.querySelectorAll('.slide');let c=0;
@@ -1901,6 +1954,7 @@ document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowD
 function dl(){const b=new Blob([document.documentElement.outerHTML],{type:'text/html'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Roof_yhteenveto_${jaksoDl}.html';a.click();}
 ${sortJs}
 _rMoV();
+_drawKohteet();
 ${editorJs}
 <\/script></body></html>`;
 }
