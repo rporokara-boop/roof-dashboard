@@ -1452,7 +1452,8 @@ async function loadFromSheets(){
       const aggM=idx===0?offToimaritM:idx===1?offKaupatM:offNaytotM;
       const agField=idx===0?'toimeksiannot':idx===1?'kaupat':'naytot';
       csvRows(txt).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Tiimi').forEach(row=>{
-        const o=row['Toimisto'];if(!o)return;
+        const oRaw=row['Toimisto'];if(!oRaw)return;
+        const o=oRaw.includes(' / ')?oRaw.split(' / ')[0].trim():oRaw;
         const v=parseFinNum(row['Kumulatiivinen']);
         agg[o]=(agg[o]||0)+v;
         if(!aggM[o])aggM[o]=Array(12).fill(0);
