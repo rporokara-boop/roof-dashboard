@@ -1235,7 +1235,9 @@ function renderAg(){
       <td>${eurCell(d.ag_palkkio)}</td>
       <td style="white-space:nowrap">${tavCell}</td>
       <td>${sc}</td><td>${nb}</td>
-      <td>${d.asked_pct>0?d.asked_pct+'%':'—'}</td>
+      <td>${d.kaupat!=null?Math.round(d.kaupat):'—'}</td>
+      <td>${d.naytot!=null?Math.round(d.naytot):'—'}</td>
+      <td>${d.toimeksiannot!=null?Math.round(d.toimeksiannot):'—'}</td>
       <td>${succ}</td><td>${dev}</td>
     </tr>`;
   }).join('');
