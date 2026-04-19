@@ -692,35 +692,6 @@ function checkAuth(){
     </div>
   </div>
 
-  <div class="palaveri-card">
-    <h2>📋 Muodosta palaveri</h2>
-    <div class="meta">Liitä Word-dokumentin teksti tai kirjoita aiheet — generoi valmiin palaverin HTML-pohjan</div>
-
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      <div style="flex:1;min-width:180px">
-        <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">PÄIVÄMÄÄRÄ</div>
-        <input type="date" id="palaveriDate" style="width:100%;padding:10px 12px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.85rem;font-family:inherit;color:#003848;background:#fff;outline:none">
-      </div>
-      <div style="flex:1;min-width:180px">
-        <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">PALAVERIN NIMI</div>
-        <input type="text" id="palaveriTitle" placeholder="esim. Myyntipalaveri Q2" style="width:100%;padding:10px 12px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.85rem;font-family:inherit;color:#003848;background:#fff;outline:none">
-      </div>
-    </div>
-
-    <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">AGENDA / AIHEET <span style="font-weight:400;opacity:.6;font-size:.68rem">(liitä teksti tai kirjoita — yksi aihe per rivi)</span></div>
-    <textarea id="palaveriAgenda" rows="10" placeholder="1. Kuukauden myyntitulokset&#10;2. Toimistokohtainen tilanne&#10;3. Tavoitteet ensi kuulle&#10;4. Kehityskeskustelut — aikataulu&#10;5. Vapaa sana" style="width:100%;padding:14px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.84rem;font-family:inherit;color:#003848;resize:vertical;outline:none;background:#fafaf8;line-height:1.65;margin-bottom:16px"></textarea>
-
-    <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">LISÄTIETOJA / MUISTIINPANOT <span style="font-weight:400;opacity:.6;font-size:.68rem">(valinnainen)</span></div>
-    <textarea id="palaveriNotes" rows="3" placeholder="esim. Linkki presentaatioon, tärkeät huomiot, osallistujat..." style="width:100%;padding:14px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.84rem;font-family:inherit;color:#003848;resize:vertical;outline:none;background:#fafaf8;line-height:1.65;margin-bottom:20px"></textarea>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="palaveri-btn btn-teal" onclick="esikatselePohjeri()">👁 Esikatsele</button>
-      <button class="palaveri-btn btn-outline" onclick="lataaPohjeri()">⬇ Lataa HTML</button>
-      <button class="palaveri-btn" id="palaveriNetlifyBtn" onclick="julkaisePalaveriNetlify()" style="background:#00AD9F;color:#fff">🌐 Julkaise verkossa</button>
-      <span id="palaveriStatus" style="font-size:.8rem;color:#A09074"></span>
-    </div>
-    <div id="palaveriNetlifyResult" style="display:none;margin-top:12px;padding:12px 16px;background:#f0fafa;border:1.5px solid #28D1CD;border-radius:10px;font-size:.84rem;color:#003848"></div>
-  </div>
 </div>
 
 <script>
@@ -1999,13 +1970,6 @@ function sendInvite(){
   document.getElementById('inviteStatus').textContent = `Kutsu lähetetty ${selected.length} henkilölle.`;
   setTimeout(()=>document.getElementById('inviteStatus').textContent='', 4000);
 }
-
-// ── PALAVERI-POHJA ──────────────────────────────
-// Set today's date as default
-document.addEventListener('DOMContentLoaded',()=>{
-  const pd=document.getElementById('palaveriDate');
-  if(pd&&!pd.value) pd.value=new Date().toISOString().slice(0,10);
-});
 
 function parsePalaveriItems(text){
   return text.split('\n')
