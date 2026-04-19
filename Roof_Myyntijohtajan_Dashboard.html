@@ -691,6 +691,36 @@ function checkAuth(){
       <span id="inviteStatus" style="font-size:.8rem;color:#A09074;align-self:center"></span>
     </div>
   </div>
+
+  <div class="palaveri-card">
+    <h2>📋 Muodosta palaveri</h2>
+    <div class="meta">Liitä Word-dokumentin teksti tai kirjoita aiheet — generoi valmiin palaverin HTML-pohjan</div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">PÄIVÄMÄÄRÄ</div>
+        <input type="date" id="palaveriDate" style="width:100%;padding:10px 12px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.85rem;font-family:inherit;color:#003848;background:#fff;outline:none">
+      </div>
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">PALAVERIN NIMI</div>
+        <input type="text" id="palaveriTitle" placeholder="esim. Myyntipalaveri Q2" style="width:100%;padding:10px 12px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.85rem;font-family:inherit;color:#003848;background:#fff;outline:none">
+      </div>
+    </div>
+
+    <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">AGENDA / AIHEET <span style="font-weight:400;opacity:.6;font-size:.68rem">(liitä teksti tai kirjoita — yksi aihe per rivi)</span></div>
+    <textarea id="palaveriAgenda" rows="10" placeholder="1. Kuukauden myyntitulokset&#10;2. Toimistokohtainen tilanne&#10;3. Tavoitteet ensi kuulle&#10;4. Kehityskeskustelut — aikataulu&#10;5. Vapaa sana" style="width:100%;padding:14px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.84rem;font-family:inherit;color:#003848;resize:vertical;outline:none;background:#fafaf8;line-height:1.65;margin-bottom:16px"></textarea>
+
+    <div style="font-size:.72rem;font-weight:700;letter-spacing:.12em;color:#003848;margin-bottom:6px">LISÄTIETOJA / MUISTIINPANOT <span style="font-weight:400;opacity:.6;font-size:.68rem">(valinnainen)</span></div>
+    <textarea id="palaveriNotes" rows="3" placeholder="esim. Linkki presentaatioon, tärkeät huomiot, osallistujat..." style="width:100%;padding:14px;border:1.5px solid #e8e4dc;border-radius:10px;font-size:.84rem;font-family:inherit;color:#003848;resize:vertical;outline:none;background:#fafaf8;line-height:1.65;margin-bottom:20px"></textarea>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="palaveri-btn btn-teal" onclick="esikatselePohjeri()">👁 Esikatsele</button>
+      <button class="palaveri-btn btn-outline" onclick="lataaPohjeri()">⬇ Lataa HTML</button>
+      <button class="palaveri-btn" id="palaveriNetlifyBtn" onclick="julkaisePalaveriNetlify()" style="background:#00AD9F;color:#fff">🌐 Julkaise verkossa</button>
+      <span id="palaveriStatus" style="font-size:.8rem;color:#A09074"></span>
+    </div>
+    <div id="palaveriNetlifyResult" style="display:none;margin-top:12px;padding:12px 16px;background:#f0fafa;border:1.5px solid #28D1CD;border-radius:10px;font-size:.84rem;color:#003848"></div>
+  </div>
 </div>
 
 <script>
@@ -1968,6 +1998,132 @@ function sendInvite(){
   window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
   document.getElementById('inviteStatus').textContent = `Kutsu lähetetty ${selected.length} henkilölle.`;
   setTimeout(()=>document.getElementById('inviteStatus').textContent='', 4000);
+}
+
+// ── PALAVERI-POHJA ──────────────────────────────
+// Set today's date as default
+document.addEventListener('DOMContentLoaded',()=>{
+  const pd=document.getElementById('palaveriDate');
+  if(pd&&!pd.value) pd.value=new Date().toISOString().slice(0,10);
+});
+
+function parsePalaveriItems(text){
+  return text.split('\n')
+    .map(l=>l.trim())
+    .filter(l=>l.length>0)
+    .map(l=>l.replace(/^[\d]+[\.\)]\s*/,'').replace(/^[-•*]\s*/,''))
+    .filter(l=>l.length>0);
+}
+
+function generatePalaveriHtml(){
+  const title=document.getElementById('palaveriTitle').value.trim()||'Myyntipalaveri';
+  const dateVal=document.getElementById('palaveriDate').value;
+  const notes=document.getElementById('palaveriNotes').value.trim();
+  const agendaText=document.getElementById('palaveriAgenda').value.trim();
+  const items=parsePalaveriItems(agendaText);
+  const dateStr=dateVal?new Date(dateVal).toLocaleDateString('fi-FI',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'';
+  const agendaHtml=items.length?items.map((item,i)=>`
+    <div style="display:flex;gap:18px;align-items:flex-start;padding:20px 24px;background:#fff;border-radius:12px;border:1.5px solid #e8e4dc;margin-bottom:12px">
+      <div style="min-width:36px;height:36px;border-radius:50%;background:#003848;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;flex-shrink:0">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:1rem;font-weight:700;color:#003848;margin-bottom:8px">${item}</div>
+        <div style="height:60px;border-bottom:1px solid #e8e4dc;opacity:.4"></div>
+      </div>
+    </div>`).join('')
+    :'<div style="padding:20px;color:#A09074;font-style:italic">Ei agendakohtia.</div>';
+  const notesHtml=notes?`
+    <div style="margin-top:24px;padding:20px;background:#f5f3ef;border-radius:12px;border:1.5px solid #e8e4dc">
+      <div style="font-size:.72rem;font-weight:700;letter-spacing:.16em;color:#003848;margin-bottom:10px">MUISTIINPANOT</div>
+      <div style="font-size:.88rem;color:#003848;white-space:pre-wrap;line-height:1.7">${notes}</div>
+    </div>`:''
+  return`<!DOCTYPE html><html lang="fi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f3ef;min-height:100vh;padding:0}
+.cover{background:#003848;padding:48px 40px 40px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border:40px solid rgba(40,209,205,.08);border-radius:50%}
+.cover::after{content:'';position:absolute;bottom:-40px;left:40px;width:160px;height:160px;border:28px solid rgba(40,209,205,.06);border-radius:50%}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:36px}
+.logo-text{font-size:.8rem;font-weight:800;letter-spacing:.2em;color:rgba(255,255,255,.6)}
+.cover-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.22em;color:#28D1CD;margin-bottom:10px}
+.cover-title{font-size:2rem;font-weight:800;color:#fff;line-height:1.2;margin-bottom:8px}
+.cover-date{font-size:.88rem;color:rgba(255,255,255,.5);margin-top:12px;text-transform:capitalize}
+.body{max-width:720px;margin:0 auto;padding:32px 20px 48px}
+.section-label{font-size:.7rem;font-weight:700;letter-spacing:.2em;color:#A09074;margin-bottom:16px;padding-top:8px}
+.footer{text-align:center;padding:24px;font-size:.72rem;color:#A09074;border-top:1px solid #e8e4dc;margin-top:8px}
+@media print{body{background:#fff}.cover{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+</style></head><body>
+<div class="cover">
+  <div class="logo">
+    <svg width="26" height="16" viewBox="0 0 170 98" fill="none"><polygon points="85,0 170,49 170,98 85,73 0,98 0,49" fill="none" stroke="#28D1CD" stroke-width="10"/></svg>
+    <span class="logo-text">ROOF LKV</span>
+  </div>
+  <div class="cover-eyebrow">PALAVERIAGENDA</div>
+  <div class="cover-title">${title}</div>
+  ${dateStr?`<div class="cover-date">${dateStr}</div>`:''}
+</div>
+<div class="body">
+  <div class="section-label">AGENDA — ${items.length} KOHTAA</div>
+  ${agendaHtml}
+  ${notesHtml}
+  <div style="margin-top:32px;padding:20px 24px;background:#fff;border-radius:12px;border:1.5px solid #e8e4dc">
+    <div style="font-size:.72rem;font-weight:700;letter-spacing:.16em;color:#003848;margin-bottom:14px">MUUT MUISTIINPANOT</div>
+    ${Array(5).fill('<div style="height:1px;background:#e8e4dc;margin-bottom:20px"></div>').join('')}
+  </div>
+</div>
+<div class="footer">Roof LKV &mdash; ${dateStr||title}</div>
+</body></html>`;
+}
+
+let _lastPalaveriHtml=null;
+
+function esikatselePohjeri(){
+  _lastPalaveriHtml=generatePalaveriHtml();
+  window.open(URL.createObjectURL(new Blob([_lastPalaveriHtml],{type:'text/html'})),'_blank');
+  document.getElementById('palaveriStatus').textContent='Esikatselu avattu.';
+  setTimeout(()=>document.getElementById('palaveriStatus').textContent='',3000);
+}
+
+function lataaPohjeri(){
+  const html=_lastPalaveriHtml||generatePalaveriHtml();
+  const title=(document.getElementById('palaveriTitle').value.trim()||'Palaveri').replace(/\s+/g,'_');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download='Roof_'+title+'.html'; a.click();
+  document.getElementById('palaveriStatus').textContent='Ladattu.';
+  setTimeout(()=>document.getElementById('palaveriStatus').textContent='',3000);
+}
+
+async function julkaisePalaveriNetlify(){
+  const TOKEN='nfp_ZnmxfTgqKY3SsHR92GTo8K8ynqo47hoK6975';
+  const btn=document.getElementById('palaveriNetlifyBtn');
+  const res=document.getElementById('palaveriNetlifyResult');
+  btn.textContent='⏳ Julkaistaan...'; btn.disabled=true; res.style.display='none';
+  try{
+    const html=_lastPalaveriHtml||generatePalaveriHtml();
+    const data=new TextEncoder().encode(html);
+    const hashBuf=await crypto.subtle.digest('SHA-1',data);
+    const sha1=Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const title=(document.getElementById('palaveriTitle').value.trim()||'palaveri').replace(/[^a-z0-9]/gi,'-').toLowerCase().slice(0,30);
+    const siteName='roof-'+title+'-'+Math.floor(Date.now()/1000);
+    const siteR=await fetch('https://api.netlify.com/api/v1/sites',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({name:siteName})});
+    if(!siteR.ok) throw new Error('Sivuston luonti epäonnistui: '+siteR.status);
+    const site=await siteR.json();
+    const depR=await fetch('https://api.netlify.com/api/v1/sites/'+site.id+'/deploys',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({files:{'/index.html':sha1}})});
+    if(!depR.ok) throw new Error('Deploy epäonnistui');
+    const dep=await depR.json();
+    const upR=await fetch('https://api.netlify.com/api/v1/deploys/'+dep.id+'/files/index.html',{method:'PUT',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/octet-stream'},body:data});
+    if(!upR.ok) throw new Error('Upload epäonnistui');
+    const url=site.ssl_url||site.url;
+    res.style.display='block';res.style.background='#f0fafa';res.style.borderColor='#28D1CD';
+    res.innerHTML='✅ Julkaistu! <a href="'+url+'" target="_blank" style="color:#003848;font-weight:700">'+url+'</a> &nbsp;<button onclick="navigator.clipboard.writeText(\''+url+'\').then(()=>this.textContent=\'Kopioitu!\')" style="border:none;background:none;color:#00AD9F;font-weight:700;cursor:pointer;font-size:.84rem">📋 Kopioi</button>';
+  }catch(e){
+    res.style.display='block';res.style.background='#fff5f5';res.style.borderColor='#f87171';
+    res.textContent='❌ '+e.message;
+  }finally{
+    btn.textContent='🌐 Julkaise verkossa';btn.disabled=false;
+  }
 }
 </script>
 </body>
