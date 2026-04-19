@@ -1483,11 +1483,14 @@ async function loadFromSheets(){
         if(!D.office_monthly[o])D.office_monthly[o]={myynti:Array(12).fill(0),tapaamiset:Array(12).fill(0)};
         D.office_monthly[o].myynti=offAgg[o].mMyynti;
         D.office_monthly[o].tapaamiset=offAgg[o].mTap;
-        if(offToimaritM[o])D.office_monthly[o].toimeksiannot=offToimaritM[o];
-        if(offKaupatM[o])D.office_monthly[o].kaupat=offKaupatM[o];
-        if(offNaytotM[o])D.office_monthly[o].naytot=offNaytotM[o];
       }
     });
+    // Assign monthly kaupat/naytot/toimeksiannot separately (office names may differ from offAgg keys)
+    if(D.office_monthly){
+      Object.keys(offKaupatM).forEach(o=>{if(D.office_monthly[o])D.office_monthly[o].kaupat=offKaupatM[o];});
+      Object.keys(offNaytotM).forEach(o=>{if(D.office_monthly[o])D.office_monthly[o].naytot=offNaytotM[o];});
+      Object.keys(offToimaritM).forEach(o=>{if(D.office_monthly[o])D.office_monthly[o].toimeksiannot=offToimaritM[o];});
+    }
     // Update overview charts in-place
     const noVuok=o=>o!=='Vuokraus';
     const sc=Chart.getChart(document.getElementById('cSales'));
