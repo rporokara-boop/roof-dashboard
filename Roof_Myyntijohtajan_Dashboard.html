@@ -352,8 +352,8 @@ function checkAuth(){
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px" id="pizzaOfficeButtons"></div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--roof-border)">
     <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-right:4px">Jakso:</span>
-    <button id="pizzaBtnKumul" onclick="pizzaSetMode('kumul')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-teal);background:var(--roof-teal);color:white;font-weight:700;font-size:.72rem;cursor:pointer">Kumulatiivinen</button>
-    <button id="pizzaBtnYear" onclick="pizzaSetMode('year')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-border);background:white;color:var(--text);font-weight:700;font-size:.72rem;cursor:pointer">Koko vuosi</button>
+    <button id="pizzaBtnKumul" onclick="pizzaSetMode('kumul')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-teal);background:#003848;color:white;font-weight:700;font-size:.72rem;cursor:pointer">Kumulatiivinen</button>
+    <button id="pizzaBtnYear" onclick="pizzaSetMode('year')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-border);background:#f0ede8;color:#003848;font-weight:700;font-size:.72rem;cursor:pointer">Koko vuosi</button>
     <div style="width:1px;height:18px;background:var(--roof-border);margin:0 3px;align-self:center"></div>
     <div id="pizzaMonthBtns" style="display:flex;gap:5px;flex-wrap:wrap"></div>
   </div>
@@ -504,8 +504,8 @@ function checkAuth(){
     <div class="yht-divider">1. VALITSE JAKSO</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:10px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--roof-border)">
       <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-right:4px">Jakso:</span>
-      <button id="yhtBtnKumul" onclick="yhtSetMode('kumul')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-teal);background:var(--roof-teal);color:white;font-weight:700;font-size:.72rem;cursor:pointer">Kumulatiivinen</button>
-      <button id="yhtBtnYear" onclick="yhtSetMode('year')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-border);background:white;color:var(--text);font-weight:700;font-size:.72rem;cursor:pointer">Koko vuosi</button>
+      <button id="yhtBtnKumul" onclick="yhtSetMode('kumul')" style="padding:5px 11px;border-radius:14px;border:2px solid #003848;background:#003848;color:white;font-weight:700;font-size:.72rem;cursor:pointer">Kumulatiivinen</button>
+      <button id="yhtBtnYear" onclick="yhtSetMode('year')" style="padding:5px 11px;border-radius:14px;border:2px solid var(--roof-border);background:#f0ede8;color:#003848;font-weight:700;font-size:.72rem;cursor:pointer">Koko vuosi</button>
       <div style="width:1px;height:18px;background:var(--roof-border);margin:0 3px;align-self:center"></div>
       <div id="yhtMonthBtns" style="display:flex;gap:5px;flex-wrap:wrap"></div>
     </div>
@@ -1364,13 +1364,13 @@ function yhtToggleMonth(idx){
 function updateYhtModeUI(){
   const k=document.getElementById('yhtBtnKumul'), y=document.getElementById('yhtBtnYear');
   if(!k) return;
-  const tl='var(--roof-teal)',bdr='var(--roof-border)',wh='#f0ede8',tx='var(--text)';
+  const tl='#003848',bdr='#E0D9CF',wh='#f0ede8',tx='#003848';
   const kA=yhtMode==='kumul', yA=yhtMode==='year';
   k.style.cssText=`padding:5px 11px;border-radius:14px;border:2px solid ${kA?tl:bdr};background:${kA?tl:wh};color:${kA?'white':tx};font-weight:700;font-size:.72rem;cursor:pointer`;
   y.style.cssText=`padding:5px 11px;border-radius:14px;border:2px solid ${yA?tl:bdr};background:${yA?tl:wh};color:${yA?'white':tx};font-weight:700;font-size:.72rem;cursor:pointer`;
   document.querySelectorAll('.yht-m-btn').forEach(b=>{
     const mi=parseInt(b.dataset.mi), ac=yhtMode==='months'&&yhtMonthSel.includes(mi);
-    b.style.cssText=`padding:5px 9px;border-radius:14px;border:2px solid ${ac?'var(--roof-navy)':bdr};background:${ac?'var(--roof-navy)':wh};color:${ac?wh:tx};font-weight:700;font-size:.71rem;cursor:pointer`;
+    b.style.cssText=`padding:5px 9px;border-radius:14px;border:2px solid ${ac?'#003848':bdr};background:${ac?'#003848':wh};color:${ac?'white':tx};font-weight:700;font-size:.71rem;cursor:pointer`;
   });
 }
 
