@@ -1445,6 +1445,8 @@ async function loadFromSheets(){
       ag.tapaamiset_monthly.forEach((v,i)=>offAgg[o].mTap[i]+=v);
     });
     // Aggregate toimeksiannot, kaupat, näytöt per office
+    const OFFICE_ALIAS={'Espoon tiimi':'Espoo','Helsingin tiimi':'Helsinki'};
+    const normOff=oRaw=>{if(!oRaw)return oRaw;const base=oRaw.includes(' / ')?oRaw.split(' / ')[0].trim():oRaw.trim();return OFFICE_ALIAS[base]||base;};
     const offToimarit={},offKaupat={},offNaytot={};
     const offToimaritM={},offKaupatM={},offNaytotM={};
     [t3,t4,t5].forEach((txt,idx)=>{
@@ -1453,7 +1455,7 @@ async function loadFromSheets(){
       const agField=idx===0?'toimeksiannot':idx===1?'kaupat':'naytot';
       csvRows(txt).filter(r=>r['Välittäjä']&&r['Välittäjä']!=='Tiimi').forEach(row=>{
         const oRaw=row['Toimisto'];if(!oRaw)return;
-        const o=oRaw.includes(' / ')?oRaw.split(' / ')[0].trim():oRaw;
+        const o=normOff(oRaw);
         const v=parseFinNum(row['Kumulatiivinen']);
         agg[o]=(agg[o]||0)+v;
         if(!aggM[o])aggM[o]=Array(12).fill(0);
