@@ -478,24 +478,27 @@ function checkAuth(){
   <div class="ctrl-bar">
     <input class="search" id="agSearch" placeholder="🔍 Etsi välittäjää..." oninput="filterAg()">
     <select class="filter" id="agOffice" onchange="filterAg()"><option value="">Kaikki toimistot</option></select>
-    <select class="filter" id="agSort" onchange="filterAg()">
-      <option value="myynti">Järjestä: Myynti</option>
-      <option value="vauhti">Järjestä: Vauhti</option>
-      <option value="nps">Järjestä: NPS</option>
-      <option value="tapaamiset">Järjestä: Tapaamiset</option>
-      <option value="score">Järjestä: Arvosana</option>
-      <option value="asked">Järjestä: Toimek.%</option>
-      <option value="tavoite">Järjestä: Tavoitevauhti%</option>
-    </select>
+
   </div>
   <div style="overflow-x:auto">
     <table class="atbl">
-      <thead><tr>
-        <th>#</th><th>Välittäjä</th><th>Toimisto</th>
-        <th>Myynti YTD</th><th>Vauhti/v</th><th>Tapaamiset</th>
-        <th>Tap→Kauppa%</th><th>Tap→Toimari%</th><th>Tap.arvo €</th><th>Keskim.palkkio</th>
-        <th>Tavoitevauhti</th>
-        <th>Arvosana</th><th>NPS</th><th>Kaupat</th><th>Näytöt</th><th>Toimeksiannot</th>
+      <thead><tr id="agHead" style="--sth:color:#28D1CD;cursor:pointer;user-select:none">
+        <th style="cursor:default">#</th>
+        <th onclick="sortAg('name')" style="cursor:pointer;white-space:nowrap">Välittäjä<span id="sn-name" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('toimisto')" style="cursor:pointer;white-space:nowrap">Toimisto<span id="sn-toimisto" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('myynti')" style="cursor:pointer;white-space:nowrap">Myynti YTD<span id="sn-myynti" style="color:#28D1CD"> ↓</span></th>
+        <th onclick="sortAg('vauhti')" style="cursor:pointer;white-space:nowrap">Vauhti/v<span id="sn-vauhti" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('tapaamiset')" style="cursor:pointer;white-space:nowrap">Tapaamiset<span id="sn-tapaamiset" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('tapkauppa')" style="cursor:pointer;white-space:nowrap">Tap→Kauppa%<span id="sn-tapkauppa" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('taptoimari')" style="cursor:pointer;white-space:nowrap">Tap→Toimari%<span id="sn-taptoimari" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('taparvo')" style="cursor:pointer;white-space:nowrap">Tap.arvo €<span id="sn-taparvo" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('palkkio')" style="cursor:pointer;white-space:nowrap">Keskim.palkkio<span id="sn-palkkio" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('tavoite')" style="cursor:pointer;white-space:nowrap">Tavoitevauhti<span id="sn-tavoite" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('score')" style="cursor:pointer;white-space:nowrap">Arvosana<span id="sn-score" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('nps')" style="cursor:pointer;white-space:nowrap">NPS<span id="sn-nps" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('kaupat')" style="cursor:pointer;white-space:nowrap">Kaupat<span id="sn-kaupat" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('naytot')" style="cursor:pointer;white-space:nowrap">Näytöt<span id="sn-naytot" style="color:#28D1CD"></span></th>
+        <th onclick="sortAg('toimeksiannot')" style="cursor:pointer;white-space:nowrap">Toimeksiannot<span id="sn-toimeksiannot" style="color:#28D1CD"></span></th>
         <th>Top onnistuminen</th><th>Kehitettävää</th>
       </tr></thead>
       <tbody id="agBody"></tbody>
@@ -1181,6 +1184,7 @@ function buildBench(){
 
 // ── AGENTS TAB ────────────────────────────────────
 let agBuilt=false;
+let agSortKey='myynti', agSortDir='desc';
 function buildAgTable(){
   if(agBuilt) return; agBuilt=true;
   const sel=document.getElementById('agOffice');
@@ -1188,21 +1192,37 @@ function buildAgTable(){
   renderAg();
 }
 function filterAg(){ renderAg(); }
+function sortAg(key){
+  if(agSortKey===key) agSortDir=agSortDir==='desc'?'asc':'desc';
+  else { agSortKey=key; agSortDir='desc'; }
+  document.querySelectorAll('[id^="sn-"]').forEach(s=>s.textContent='');
+  const ind=document.getElementById('sn-'+key);
+  if(ind) ind.textContent=agSortDir==='desc'?' ↓':' ↑';
+  renderAg();
+}
 function renderAg(){
   const q=(document.getElementById('agSearch').value||'').toLowerCase();
   const off=document.getElementById('agOffice').value;
-  const sort=document.getElementById('agSort').value;
   let list=Object.entries(agents).filter(([n,d])=>{
     return n.toLowerCase().includes(q)&&(!off||d.toimisto===off);
   });
+  const d=agSortDir==='asc'?1:-1;
   list.sort((a,b)=>{
-    if(sort==='myynti') return b[1].myynti-a[1].myynti;
-    if(sort==='vauhti') return (b[1].vauhti||0)-(a[1].vauhti||0);
-    if(sort==='nps') return b[1].nps-a[1].nps;
-    if(sort==='tapaamiset') return b[1].tapaamiset-a[1].tapaamiset;
-    if(sort==='score') return b[1].avg_score-a[1].avg_score;
-    if(sort==='asked') return b[1].asked_pct-a[1].asked_pct;
-    if(sort==='tavoite'){const cm=new Date().getMonth()+1;const pct=d=>d[1].tavoite>0?d[1].myynti/(d[1].tavoite*(cm/12)):0;return pct(b)-pct(a);}
+    if(agSortKey==='myynti') return (a[1].myynti-b[1].myynti)*d;
+    if(agSortKey==='vauhti') return ((a[1].vauhti||0)-(b[1].vauhti||0))*d;
+    if(agSortKey==='nps') return (a[1].nps-b[1].nps)*d;
+    if(agSortKey==='tapaamiset') return (a[1].tapaamiset-b[1].tapaamiset)*d;
+    if(agSortKey==='score') return (a[1].avg_score-b[1].avg_score)*d;
+    if(agSortKey==='tapkauppa') return ((a[1].tap_kauppa||0)-(b[1].tap_kauppa||0))*d;
+    if(agSortKey==='taptoimari') return ((a[1].tap_toimari||0)-(b[1].tap_toimari||0))*d;
+    if(agSortKey==='taparvo') return ((a[1].tap_arvo||0)-(b[1].tap_arvo||0))*d;
+    if(agSortKey==='palkkio') return ((a[1].ag_palkkio||0)-(b[1].ag_palkkio||0))*d;
+    if(agSortKey==='tavoite'){const pct=x=>x[1].tavoite>0?x[1].vauhti/x[1].tavoite:0;return(pct(a)-pct(b))*d;}
+    if(agSortKey==='kaupat') return ((a[1].kaupat||0)-(b[1].kaupat||0))*d;
+    if(agSortKey==='naytot') return ((a[1].naytot||0)-(b[1].naytot||0))*d;
+    if(agSortKey==='toimeksiannot') return ((a[1].toimeksiannot||0)-(b[1].toimeksiannot||0))*d;
+    if(agSortKey==='name') return a[0].localeCompare(b[0],'fi')*d;
+    if(agSortKey==='toimisto') return (a[1].toimisto||'').localeCompare(b[1].toimisto||'','fi')*d;
     return 0;
   });
   document.getElementById('agBody').innerHTML=list.map(([name,d],i)=>{
