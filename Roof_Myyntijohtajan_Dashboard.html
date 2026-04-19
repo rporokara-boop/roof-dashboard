@@ -1435,18 +1435,19 @@ async function loadFromSheets(){
         }
       }
     }
+    // Normalise sub-office names → top-level office key
+    const OFFICE_ALIAS={'Espoon tiimi':'Espoo','Helsingin tiimi':'Helsinki'};
+    const normOff=oRaw=>{if(!oRaw)return oRaw;const base=oRaw.includes(' / ')?oRaw.split(' / ')[0].trim():oRaw.trim();return OFFICE_ALIAS[base]||base;};
     // Aggregate per-office totals from agents
     const offAgg={};
     Object.values(D.agents).forEach(ag=>{
-      const o=ag.toimisto;if(!o)return;
+      const o=normOff(ag.toimisto);if(!o)return;
       if(!offAgg[o])offAgg[o]={myynti:0,vauhti:0,tapaamiset:0,mMyynti:Array(12).fill(0),mTap:Array(12).fill(0)};
       offAgg[o].myynti+=ag.myynti;offAgg[o].vauhti+=(ag.vauhti||0);offAgg[o].tapaamiset+=ag.tapaamiset;
       ag.myynti_monthly.forEach((v,i)=>offAgg[o].mMyynti[i]+=v);
       ag.tapaamiset_monthly.forEach((v,i)=>offAgg[o].mTap[i]+=v);
     });
     // Aggregate toimeksiannot, kaupat, näytöt per office
-    const OFFICE_ALIAS={'Espoon tiimi':'Espoo','Helsingin tiimi':'Helsinki'};
-    const normOff=oRaw=>{if(!oRaw)return oRaw;const base=oRaw.includes(' / ')?oRaw.split(' / ')[0].trim():oRaw.trim();return OFFICE_ALIAS[base]||base;};
     const offToimarit={},offKaupat={},offNaytot={};
     const offToimaritM={},offKaupatM={},offNaytotM={};
     [t3,t4,t5].forEach((txt,idx)=>{
