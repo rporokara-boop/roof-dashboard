@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myyntijohdon opit · 20.04.2026 · Välittäjille</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Roof Brand — samat värit kuin myyntijohdon palaveri -pohjassa */
+  :root {
+    --roof-teal: #003848;
+    --roof-teal-2: #004b60;
+    --roof-teal-3: #0a5c72;
+    --roof-cream: #F5F1EC;
+    --roof-cream-dim: #e6ddce;
+    --roof-ink: #181818;
+    --roof-taupe: #A09074;
+    --roof-taupe-soft: #c4b89e;
+    --roof-turquoise: #28D1CD;
+    --roof-turquoise-soft: #7fe2df;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; overflow: hidden;
+    font-family: "Aventa", "Figtree", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
+    background: var(--roof-teal); color: var(--roof-cream);
+    font-feature-settings: "ss01", "cv11";
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .role-bar {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 20;
+    display: flex; gap: 6px; background: rgba(0,30,40,.75); padding: 6px; border-radius: 999px;
+    border: 1px solid rgba(245,241,236,.14); backdrop-filter: blur(14px);
+  }
+  .role-bar button {
+    background: transparent; color: var(--roof-cream-dim); border: 1px solid transparent;
+    padding: 8px 16px; border-radius: 999px; font-size: 12.5px; cursor: pointer;
+    font-family: inherit; font-weight: 600; letter-spacing: .3px; transition: all .2s;
+  }
+  .role-bar button:hover { color: var(--roof-cream); }
+  .role-bar button.active { background: var(--roof-cream); color: var(--roof-teal); border-color: var(--roof-cream); }
+
+  .slide {
+    position: absolute; inset: 0; padding: 64px 64px 56px;
+    display: none; flex-direction: column; justify-content: flex-start;
+    background: var(--roof-teal); overflow-y: auto;
+  }
+  .slide.active { display: flex; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .slide::before {
+    content: "ROOF"; position: absolute; top: 22px; left: 34px; z-index: 5;
+    font-weight: 800; font-size: 14px; letter-spacing: 3.5px; color: var(--roof-cream);
+    text-transform: uppercase;
+  }
+  .slide::after {
+    content: ""; position: absolute; top: 29px; left: 80px; z-index: 5;
+    width: 5px; height: 5px; background: var(--roof-turquoise); border-radius: 999px;
+  }
+  .slide.cover::before, .slide.cover::after { display: none; }
+
+  .slide-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid rgba(245,241,236,.12); padding-bottom: 12px; padding-top: 4px; }
+  .eyebrow { font-size: 11px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--roof-taupe-soft); font-weight: 600; }
+  .slide-no { font-size: 11px; color: var(--roof-taupe); font-variant-numeric: tabular-nums; letter-spacing: 1.2px; }
+
+  h1 { font-size: 52px; line-height: 1.02; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.03em; color: var(--roof-cream); }
+  h2 { font-size: 32px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.02em; color: var(--roof-cream); line-height: 1.15; }
+  h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; color: var(--roof-cream); letter-spacing: -0.005em; }
+  p { font-size: 15px; line-height: 1.6; color: rgba(245,241,236,.82); }
+
+  /* Cover */
+  .cover { justify-content: center; text-align: left; padding-top: 64px; }
+  .cover h1 { font-size: 78px; line-height: 0.95; color: var(--roof-cream); letter-spacing: -0.04em; font-weight: 800; }
+  .cover h1 em { font-style: normal; color: var(--roof-turquoise); }
+  .cover .subtitle { font-size: 22px; color: var(--roof-taupe-soft); margin-top: 14px; font-weight: 500; }
+  .cover .meta { margin-top: 32px; font-size: 15px; color: rgba(245,241,236,.72); line-height: 1.7; max-width: 880px; }
+  .cover .accent {
+    display: inline-block; padding: 7px 16px; border: 1px solid var(--roof-turquoise); border-radius: 999px;
+    color: var(--roof-turquoise); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
+    margin-bottom: 28px; font-weight: 700;
+  }
+  .cover-blocks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 40px; }
+  .cover-block { background: rgba(245,241,236,.04); border: 1px solid rgba(245,241,236,.12); border-radius: 18px; padding: 18px 20px; position: relative; overflow: hidden; }
+  .cover-block::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .cover-block.b1::before { background: var(--roof-turquoise); }
+  .cover-block.b2::before { background: var(--roof-taupe); }
+  .cover-block.b3::before { background: var(--roof-cream); }
+  .cover-block.b4::before { background: var(--roof-turquoise-soft); }
+  .cover-block h4 { font-size: 16px; margin-bottom: 6px; color: var(--roof-cream); font-weight: 700; }
+  .cover-block .chip {
+    display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 700;
+    background: rgba(245,241,236,.1); color: var(--roof-taupe-soft);
+  }
+  .cover-block.b1 .chip { color: var(--roof-turquoise); background: rgba(40,209,205,.12); }
+  .cover-block.b2 .chip { color: var(--roof-taupe-soft); background: rgba(160,144,116,.18); }
+  .cover-block.b3 .chip { color: var(--roof-cream); background: rgba(245,241,236,.12); }
+  .cover-block.b4 .chip { color: var(--roof-turquoise-soft); background: rgba(40,209,205,.1); }
+  .cover-block p { font-size: 13.5px; color: rgba(245,241,236,.75); line-height: 1.55; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .card { background: rgba(245,241,236,.045); border: 1px solid rgba(245,241,236,.1); border-radius: 16px; padding: 20px 22px; }
+  .card h3 { font-size: 16px; margin-bottom: 12px; color: var(--roof-turquoise); font-weight: 700; }
+  .card ul { list-style: none; padding: 0; }
+  .card ul li { position: relative; padding-left: 18px; margin-bottom: 8px; font-size: 13.5px; color: rgba(245,241,236,.82); line-height: 1.55; }
+  .card ul li::before { content: "→"; position: absolute; left: 0; color: var(--roof-turquoise); font-weight: 700; }
+  .card.taupe h3 { color: var(--roof-taupe-soft); }
+  .card.taupe ul li::before { color: var(--roof-taupe-soft); }
+  .card.cream h3 { color: var(--roof-cream); }
+  .card.cream ul li::before { color: var(--roof-cream); }
+
+  /* Tip kortti */
+  .tip-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; }
+  .tip { background: rgba(245,241,236,.045); border: 1px solid rgba(40,209,205,.22); border-radius: 14px; padding: 16px 18px; position: relative; }
+  .tip .num { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--roof-turquoise); font-weight: 800; margin-bottom: 6px; }
+  .tip h4 { font-size: 16px; margin-bottom: 8px; color: var(--roof-cream); font-weight: 700; }
+  .tip p { font-size: 13.5px; line-height: 1.55; color: rgba(245,241,236,.82); }
+  .tip .by { display: inline-block; margin-top: 8px; font-size: 10.5px; color: var(--roof-turquoise); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
+
+  /* Script */
+  .script { background: rgba(40,209,205,.08); border-left: 3px solid var(--roof-turquoise); padding: 12px 14px; border-radius: 0 10px 10px 0; margin-top: 8px; font-size: 13.5px; color: var(--roof-cream); line-height: 1.55; font-style: italic; }
+  .script strong { color: var(--roof-turquoise); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 10.5px; display: block; margin-bottom: 5px; font-style: normal; }
+
+  /* Banner */
+  .focus-banner { background: rgba(245,241,236,.05); border-left: 3px solid var(--roof-turquoise); padding: 14px 18px; border-radius: 0 12px 12px 0; margin-bottom: 16px; font-size: 14px; color: rgba(245,241,236,.88); line-height: 1.55; }
+  .focus-banner.success { border-left-color: var(--roof-turquoise); background: rgba(40,209,205,.07); }
+  .focus-banner.warn { border-left-color: var(--roof-taupe); background: rgba(160,144,116,.09); }
+  .focus-banner.cream { border-left-color: var(--roof-cream); background: rgba(245,241,236,.06); }
+  .focus-banner strong { color: var(--roof-cream); font-weight: 700; }
+
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: rgba(245,241,236,.05); border: 1px solid rgba(40,209,205,.22); border-radius: 14px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--roof-turquoise); }
+  .kpi .num { font-size: 30px; font-weight: 800; color: var(--roof-cream); letter-spacing: -.03em; line-height: 1; }
+  .kpi .lbl { font-size: 10.5px; color: var(--roof-turquoise); text-transform: uppercase; letter-spacing: 2px; margin-top: 6px; font-weight: 700; }
+  .kpi .sub { font-size: 11.5px; color: rgba(245,241,236,.6); margin-top: 5px; line-height: 1.45; }
+
+  /* Tarjouskysymykset */
+  .qgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .q { background: rgba(245,241,236,.04); border: 1px solid rgba(245,241,236,.1); border-radius: 10px; padding: 12px 14px; }
+  .q .qlabel { display: inline-block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--roof-taupe-soft); margin-bottom: 6px; font-weight: 700; }
+  .q .qtext { font-size: 14px; color: var(--roof-cream); font-style: italic; line-height: 1.5; }
+  .q.good { border-color: rgba(40,209,205,.35); }
+  .q.good .qlabel { color: var(--roof-turquoise); }
+  .q.better { border-color: rgba(40,209,205,.55); background: rgba(40,209,205,.08); }
+  .q.better .qlabel { color: var(--roof-turquoise); }
+  .q.watch .qlabel { color: var(--roof-taupe); }
+
+  /* Role */
+  .role-strip { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .slide[data-role="intro"] .role-strip { background: var(--roof-turquoise); }
+  .slide[data-role="klousaus"] .role-strip { background: var(--roof-turquoise); }
+  .slide[data-role="tyokalut"] .role-strip { background: var(--roof-taupe); }
+  .slide[data-role="tiimi"] .role-strip { background: var(--roof-cream); }
+  .slide[data-role="intro"] .role-tag { color: var(--roof-turquoise); }
+  .slide[data-role="klousaus"] .role-tag { color: var(--roof-turquoise); }
+  .slide[data-role="tyokalut"] .role-tag { color: var(--roof-taupe-soft); }
+  .slide[data-role="tiimi"] .role-tag { color: var(--roof-cream); }
+  .role-tag { font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 10.5px; }
+
+  .soft { color: var(--roof-taupe-soft); font-size: 13px; }
+  .who { display: inline-block; font-size: 10.5px; padding: 3px 10px; border-radius: 999px; background: rgba(40,209,205,.14); color: var(--roof-turquoise); font-weight: 700; letter-spacing: 1.2px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; }
+
+  .list-dense { list-style: none; padding: 0; }
+  .list-dense li { position: relative; padding-left: 20px; margin-bottom: 8px; font-size: 14px; color: rgba(245,241,236,.85); line-height: 1.55; }
+  .list-dense li::before { content: "→"; position: absolute; left: 0; color: var(--roof-turquoise); font-weight: 700; font-size: 14px; top: 1px; }
+
+  /* Nav */
+  .nav { position: fixed; bottom: 18px; right: 24px; display: flex; gap: 8px; z-index: 10; }
+  .nav button { background: rgba(245,241,236,.08); color: var(--roof-cream); border: 1px solid rgba(245,241,236,.18); padding: 8px 14px; border-radius: 999px; font-size: 12.5px; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .nav button:hover { background: var(--roof-turquoise); color: var(--roof-teal); border-color: var(--roof-turquoise); }
+  .counter { position: fixed; bottom: 22px; left: 34px; color: var(--roof-taupe); font-size: 11.5px; font-variant-numeric: tabular-nums; z-index: 10; letter-spacing: 1.5px; }
+
+  @media (max-width: 1024px) {
+    .slide { padding: 52px 36px 72px; }
+    h1 { font-size: 42px; } h2 { font-size: 26px; }
+    .cover h1 { font-size: 56px; } .cover .subtitle { font-size: 18px; }
+    .cover-blocks, .three-col { grid-template-columns: repeat(2, 1fr); }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .tip-row, .qgrid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    html, body { overflow-y: auto; height: auto; }
+    .deck { height: auto; min-height: auto; position: static; width: 100%; }
+    .slide { display: flex !important; position: relative; inset: auto; min-height: auto; padding: 40px 18px 48px; overflow: visible; animation: none !important; border-bottom: 1px solid rgba(245,241,236,.1); }
+    .slide:last-child { border-bottom: none; }
+    .slide::before, .slide::after { display: none; }
+    .role-bar { position: sticky; top: 0; left: 0; right: 0; transform: none; width: 100%; border-radius: 0; padding: 10px; gap: 4px; border: none; border-bottom: 1px solid rgba(245,241,236,.14); overflow-x: auto; white-space: nowrap; justify-content: flex-start; -webkit-overflow-scrolling: touch; background: rgba(0,30,40,.92); }
+    .role-bar button { padding: 8px 14px; font-size: 12px; flex-shrink: 0; }
+    .nav, .counter { display: none; }
+    .slide-header { flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 14px; }
+    h1 { font-size: 32px; } h2 { font-size: 22px; margin-bottom: 14px; } h3 { font-size: 15px; } p { font-size: 14px; }
+    .cover { padding-top: 46px; padding-bottom: 52px; }
+    .cover h1 { font-size: 40px; line-height: 1.0; } .cover .subtitle { font-size: 16px; }
+    .cover .meta { font-size: 14px; margin-top: 22px; }
+    .cover-blocks { grid-template-columns: 1fr; gap: 10px; margin-top: 24px; }
+    .two-col, .three-col, .tip-row, .qgrid { grid-template-columns: 1fr; gap: 12px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi .num { font-size: 24px; }
+  }
+
+  @media (max-width: 480px) {
+    .slide { padding: 36px 14px 44px; }
+    .cover h1 { font-size: 34px; }
+    h1 { font-size: 28px; } h2 { font-size: 19px; }
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    html, body { height: auto; overflow: visible; background: var(--roof-teal); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .deck { position: static; height: auto; }
+    .slide { display: flex !important; position: relative; inset: auto; width: 100%; height: auto; min-height: 100vh; padding: 42px 54px 40px; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; overflow: hidden; animation: none !important; }
+    .slide:last-child { page-break-after: auto; break-after: auto; }
+    .nav, .counter, .role-bar { display: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="role-bar">
+  <button data-role="intro" class="active" onclick="setRole('intro')">Aloitus</button>
+  <button data-role="klousaus" onclick="setRole('klousaus')">Kaupan klousaus</button>
+  <button data-role="tyokalut" onclick="setRole('tyokalut')">Työkalut</button>
+  <button data-role="tiimi" onclick="setRole('tiimi')">Tiimi &amp; rutiinit</button>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- COVER -->
+  <section class="slide cover active" data-role="intro">
+    <span class="accent">Roof · Välittäjille</span>
+    <h1>Myynnin<br><em>opit</em></h1>
+    <div class="subtitle">20.04.2026 · Parhaat vinkit kentälle</div>
+    <div class="meta">
+      Nämä ovat tuoreimmat opit myyntijohdon palaverista — konkreettisia tipsejä ja valmiita sanamuotoja, joita voi käyttää heti arjessa. Jokainen kohta on tullut siitä, että joku on jo kokeillut ja tekee näitä sekä todennut ne toimiviksi. Ei teoriaa, vaan tekoja, joita voi kopioida.
+    </div>
+    <div class="cover-blocks">
+      <div class="cover-block b1"><span class="chip">Osa 1</span><h4>Kaupan klousaus</h4><p>Nopeus ja luottamus, kysynnän illuusio, hinnan perustelu ja tarjouksen sisäänsaanti.</p></div>
+      <div class="cover-block b2"><span class="chip">Osa 2</span><h4>Työkalut</h4><p>Välittäjätilastot hankun tukena ja varaston systemaattinen läpikäynti.</p></div>
+      <div class="cover-block b3"><span class="chip">Osa 3</span><h4>Tiimi &amp; rutiinit</h4><p>Tampereen kärjen arjen rutiinit ja tämän viikon konkreettiset teot.</p></div>
+      <div class="cover-block b4"><span class="chip">Miksi</span><h4>Jaetaan suoraan</h4><p>Myyntijohto välittää nämä sellaisenaan — valitse yksi teko ja vie kenttään tällä viikolla.</p></div>
+    </div>
+  </section>
+
+  <!-- KARTTANÄKYMÄ -->
+  <section class="slide" data-role="intro">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Aloitus</span> · Karttanäkymä</span><span class="slide-no">2</span></div>
+    <h2>Mitä palaverissa nostettiin esiin</h2>
+    <p class="soft" style="margin-bottom:16px;">Kuusi teemaa, joissa kaikissa on oman joukon kokemus takana. Lue ensin se kohta, joka koskee juuri sinun tämän hetken heikointa lenkkiä.</p>
+    <div class="three-col">
+      <div class="card"><h3>1 · Nopeus &amp; luottamus</h3><ul><li>Viive on kilpailija — vastaukset valmiiksi</li><li>Soitto heti yhteydenoton perään</li><li>"Tämä on hyvä kohde" — mihin perustuu</li></ul></div>
+      <div class="card"><h3>2 · Kysynnän illuusio</h3><ul><li>Faktoihin perustuva kysynnän tuntu</li><li>Ymmärrys siitä mitä muuta ostaja katsoo</li><li>Follow up vastaukseen ja päätökseen saakka</li></ul></div>
+      <div class="card"><h3>3 · Hinnan perustelu</h3><ul><li>Perustelu alkaa ensimmäisessä puhelussa</li><li>Haasta avoimesti mihin ostajan tarjoama hinta perustuu</li></ul></div>
+      <div class="card taupe"><h3>4 · Tarjouksen sisään</h3><ul><li>Oikea kysymys poistaa esteet</li><li>Ohjeistus: miten tarjous tehdään helposti</li><li>Tarjous lukitsee ostajan kohteeseen</li></ul></div>
+      <div class="card taupe"><h3>5 · Tilastot &amp; varasto</h3><ul><li>Omat tilastot hankun tukena</li><li>Tiimin hyödyntäminen hankuissa</li><li>Varasto läpi kerran kuussa</li></ul></div>
+      <div class="card cream"><h3>6 · Tampereen kärki</h3><ul><li>Tampereen kärjen arjen rutiinit</li><li>Selkeys ja ahkeruus — ei neroutta</li><li>Rakenne tekee puolet työstä</li></ul></div>
+    </div>
+  </section>
+
+  <!-- KLOUSAUS 1 -->
+  <section class="slide" data-role="klousaus">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Klousaus</span> · 1 / 4 · Nopeus ja luottamus</span><span class="slide-no">3</span></div>
+    <h2>Viive on kilpailija — nopeus rakentaa luottamusta</h2>
+    <div class="focus-banner">
+      <strong>Miksi tämä:</strong> ostaja on monen kohteen välissä ja usean välittäjän tavoitettavissa. Se, joka vastaa ensin ja ammattitaidolla, saa sekä tämän kaupan että todennäköisemmin ostajan oman asunnon myyntiin. Viive maksaa nämä molemmat.
+    </div>
+    <div class="tip-row">
+      <div class="tip">
+        <div class="num">Tip 1</div>
+        <h4>Vastaukset valmiiksi — ei viikon päästä</h4>
+        <p>Selvitä ja osaa kohde niin hyvin, ettei vastauksissa kestä. Mikäli vastauksissa kestää, markkinoille tulee uusia kilpailevia kohteita ja kiima laskee sinun kohteesi kohdalla. Muistettu lause on aina parempi kuin improvisoitu.</p>
+        <span class="by">Taneli</span>
+      </div>
+      <div class="tip">
+        <div class="num">Tip 2</div>
+        <h4>Soitto heti yhteydenoton perään</h4>
+        <p>Puhelu voittaa viestiketjun aina. Kun näet yhteydenoton, soita viiden minuutin sisällä — silloin olet vielä ostajan mielessä, ei kilpailija. Pelkästään tällä erottuu jo kentällä. Helppoa. Ole aktiivinen.</p>
+        <span class="by">Lauri</span>
+      </div>
+      <div class="tip">
+        <div class="num">Tip 3</div>
+        <h4>"Tämä on hyvä kohde" — perustele miksi</h4>
+        <p>Luottamus syntyy siitä, että et vain kehu, vaan kerrot mihin väite perustuu. Alue, myyntiaika, vastaavat kaupat, taloyhtiön plussat — kaksi konkreettista syytä riittää, ja ostaja kuulee sinut eri tavalla.</p>
+        <span class="by">Rolle</span>
+      </div>
+      <div class="tip">
+        <div class="num">Side Tip 4</div>
+        <h4>Nopea palvelu = oma toimeksianto</h4>
+        <p>Kun hoidat ostajan palvelemisen viiveettä, saat todennäköisesti hänen oman asuntonsa myös myyntiin. Nopeus ja ammattitaito on paras markkinointimateriaali, jota pitää hyödyntää — ja se ei maksa mitään ylimääräistä.</p>
+        <span class="by">Taneli</span>
+      </div>
+    </div>
+    <div class="focus-banner success" style="margin-top:18px;">
+      <strong>Tämän viikon teko:</strong> katso edellisen viikon yhteydenotot. Vastasitko kaikkiin alle kuudessa tunnissa? Jos et, miksi ei — ja mitä muutat rakenteessa, ettei samaa tapahdu tällä viikolla.
+    </div>
+  </section>
+
+  <!-- KLOUSAUS 2 -->
+  <section class="slide" data-role="klousaus">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Klousaus</span> · 2 / 4 · Kysynnän illuusio</span><span class="slide-no">4</span></div>
+    <h2>Faktoihin perustuva kysynnän tuntu</h2>
+    <div class="focus-banner warn">
+      <strong>Ero illuusioon ja huijaukseen:</strong> kysynnän tuntu ei ole liioittelua vaan faktojen esiin nostamista. Sinulla on oikeasti tietoa — muista kiinnostuneista, alueen kaupoista. Se pitää vain sanoa ääneen oikealla hetkellä.
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>Missä vaiheessa tuntu luodaan</h3>
+        <ul>
+          <li><strong style="color:var(--roof-cream)">Jo ensimmäisessä puhelussa</strong> — Miko: ostajan mielikuva kohteesta rakentuu heti. Kerro muusta kysynnästä.</li>
+          <li><strong style="color:var(--roof-cream)">Näytöllä</strong> — Lauri &amp; Saara: "muita on myös käynyt ja on tulossa katsomaan"</li>
+          <li><strong style="color:var(--roof-cream)">Follow upissa</strong> — päivitetyt tiedot toisista kiinnostuneista, ei "odotellaan". Tällä hetkellä muutama harkitsee tarjousta.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Mitä tietoa käytetään</h3>
+        <ul>
+          <li>Kuinka monta on käynyt tai tulossa näytöille</li>
+          <li>Muiden kohteiden vertailut, joita ostaja katsoo — osaat kertoa miksi juuri sinun kohteesi erottuu edukseen alueella</li>
+          <li>Aiemmat vastaavat kaupat omalla alueella ja myyntiaika siellä</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card cream" style="margin-top:14px;">
+      <h3>Kysymys ostajalle: "Mitä muita asuntoja olette käyneet katsomassa?"</h3>
+      <p style="font-size:13.5px; line-height:1.55; color: rgba(245,241,236,.85);">
+        Kun tiedät kilpailevat kohteet, voit puhua niitä vasten: miksi teidän kohteenne on vahvempi sijainnin, kunnon, hinnan tai yhtiön kannalta. Tämä yhdistettynä alueen tuntemukseen tekee sinusta ostajalle sen henkilön, jonka kohteesta on helppoa ja luotettavaa tarjota. Enemmän tietoa kuin kilpailevista.
+      </p>
+    </div>
+    <div class="script" style="margin-top:14px;">
+      <strong>Valmis sanamuoto · näytöllä</strong>
+      "Tällä viikolla asunnolla on neljä näyttöä ja viime viikolla alueella meni kaksi vastaavaa viikon sisällä — jos tämä on teille se oikea, kannattaa miettiä etenemistä ennen viikonloppua."
+    </div>
+  </section>
+
+  <!-- KLOUSAUS 3 -->
+  <section class="slide" data-role="klousaus">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Klousaus</span> · 3 / 4 · Hinnan perustelu <span class="who">Karri</span></span><span class="slide-no">5</span></div>
+    <h2>Hinnan perustelu — alkaa ensimmäisestä puhelusta</h2>
+    <div class="focus-banner success">
+      <strong>Karrin malli:</strong> haasta ostajan hinta avoimesti ja ystävällisesti — kysy mihin se perustuu. Kun ostaja ei pysty perustelemaan hintaansa, hän usein huomaa itse, että ehkä se pyynti onkin oikein. Ja mikäli ostajalla on perusteluita, sinä voit vastata niihin ammattitaidolla.
+    </div>
+    <div class="three-col">
+      <div class="card">
+        <h3>1 · Puhelu</h3>
+        <ul>
+          <li>"Muitakin on tulossa katsomaan asuntoa" — mielikuva rakentuu heti, että kohde on yleisesti kiinnostava</li>
+          <li>Taustatyö: mitä vastaavaa on mennyt ja millä hinnalla</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>2 · Näyttö</h3>
+        <ul>
+          <li>Lauri: puhelussa ja näytöllä "te ja muutkin tulette katsomaan ja kysyntä on ollut hyvää — se kertoo, että hinta on kondiksessa"</li>
+          <li>Ostajan kysymyksiin todistettavia vastauksia, ei puolustelua</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>3 · Tarjous</h3>
+        <ul>
+          <li>Karri: "Jes — mihin teidän tarjoama hintanne perustuu?" · avoimesti, ystävällisesti</li>
+          <li>Yleinen vastaus: "Ilta-Sanomat tai serkku sanoi, että X % pois pyynnistä" — ei järkevää perustetta</li>
+          <li>Konkreettiset perustelut: asunnon kunto, tulevat remontit</li>
+          <li>Työkalut vastaperusteluille: "tämä on jo huomioitu lähtöhinnassa" — käy läpi miten ja mistä</li>
+        </ul>
+      </div>
+    </div>
+    <div class="focus-banner cream" style="margin-top:14px;">
+      <strong>Miksi tämä toimii:</strong> kun ostaja ei pysty perustelemaan omaa hintaansa muuten kuin "lehti ja serkku sanoi niin", keskustelu siirtyy faktoihin. Faktoihin vastaaminen on sinun peliä — ei enää tinkimiskilpailua. Lopputulos: paremmat tarjoukset sisään.
+    </div>
+  </section>
+
+  <!-- KLOUSAUS 4 -->
+  <section class="slide" data-role="klousaus">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Klousaus</span> · 4 / 4 · Tarjouksen sisäänsaanti</span><span class="slide-no">6</span></div>
+    <h2>Kysymys ratkaisee — miten pyydät tarjouksen</h2>
+    <div class="focus-banner warn">
+      <strong>Miksi tarjous kannattaa saada sisään:</strong> tarjouksen jättämisen jälkeen ostaja "lukittuu" kohteeseen neuvotteluiden ajaksi. Hän ei katsele muita samalla intensiteetillä, koska ajatus on jo tässä. Tarjous ei ole lopputulos — se on keino pitää ostaja mukana.
+    </div>
+    <p class="soft" style="margin-bottom:10px;">Kysymyksen muoto ohjaa mielikuvaa. Vältä muotoiluja, jotka antavat luvan tarjota alle pyyntihinnan, ja käytä niitä, jotka vievät keskustelua eteenpäin.</p>
+    <div class="qgrid">
+      <div class="q better"><span class="qlabel">Paras · poistaa esteet</span><div class="qtext">"Onko jotain vielä mikä mietityttää, vai lähdetäänkö keskustelemaan kaupasta?"</div></div>
+      <div class="q better"><span class="qlabel">Paras · etenemisen kieli</span><div class="qtext">"Lähdetäänkö keskustelemaan kaupasta?"</div></div>
+      <div class="q good"><span class="qlabel">Toimii · aktiivinen sävy</span><div class="qtext">"Lähdetäänkö hieromaan kauppaa?"</div></div>
+      <div class="q good"><span class="qlabel">Toimii · suora ostopäätös</span><div class="qtext">"Haluaisitteko ostaa tämän?"</div></div>
+      <div class="q good"><span class="qlabel">Toimii · poista kitkaa</span><div class="qtext">"Käydäänkö läpi miten tarjous tehdään — se on helpompaa kuin luulet."</div></div>
+      <div class="q watch"><span class="qlabel">Varo · liian avoin hinnalle</span><div class="qtext">"Haluatko jättää tarjouksen?"</div></div>
+      <div class="q watch"><span class="qlabel">Varo · käsky, ei kutsu</span><div class="qtext">"Tehkää tarjous."</div></div>
+      <div class="q watch"><span class="qlabel">Varo · neuvotteleva mielikuva</span><div class="qtext">"Lähdetäänkö neuvottelemaan?"</div></div>
+    </div>
+    <div class="focus-banner success" style="margin-top:14px;">
+      <strong>Ennen kuin pyydät tarjouksen — poista esteet.</strong> Jos ostaja epäröi, kysy mikä mietityttää. Käy läpi ne, ja vasta sen jälkeen kysy. Kerro konkreettisesti miten tarjous tehdään teknisesti — se, että et jätä ostajaa arvailemaan "miten", nostaa tarjousprosenttia. Kun saat tiedon, että ostaja haluaa jättää tarjouksen, esitä hintakeskustelussa kysymys <em>"pyyntihän me laitetaan?"</em> — se ohjaa tarjousta pyyntiin päin.
+    </div>
+  </section>
+
+  <!-- VÄLITTÄJÄTILASTOT -->
+  <section class="slide" data-role="tyokalut">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Työkalut</span> · Välittäjätilastot hankun tukena</span><span class="slide-no">7</span></div>
+    <h2>Välittäjätilastot hankun työkaluksi — mitä sinä käytät?</h2>
+    <div class="focus-banner">
+      <strong>Kysymys itselle:</strong> osaatko sanoa ulkomuistista kolme omaa lukua, joilla erotut kilpailevasta välittäjästä? Jos et, asiakas ei erota sinua muista — vaikka luvut olisivat kuinka kovat tahansa.
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h3>Omat tilastot — neljä tapaa käyttää</h3>
+        <ul>
+          <li><strong style="color:var(--roof-cream)">Tarina omista myynneistä:</strong> kerro mitä olet myynyt — sama alue, samankaltainen kohde, aika kauppaan</li>
+          <li>Jos omaa myyntiä ei ole, käytä kollegan — "Me olemme myyneet" on edelleen oman tiimin myyntiä</li>
+          <li>Oma myyntiaika vs. markkinan keskiarvo — korosta, että sinulla on nopeampi</li>
+          <li>Monta näyttöä per kauppa — konkreettinen luku jää mieleen</li>
+        </ul>
+      </div>
+      <div class="card taupe">
+        <h3>Tiimin ja alueen korostaminen</h3>
+        <ul>
+          <li><strong style="color:var(--roof-cream)">Espoon Menestyjä:</strong> korosta työyhteisöä — "meillä on Espoon paras tiimi" toimii</li>
+          <li>Taneli: tilasto visuaalisesti valmiiksi — korosta omia myyntejä selvästi, asiakkaan on helpompi ymmärtää</li>
+        </ul>
+      </div>
+    </div>
+    <div class="focus-banner cream" style="margin-top:14px;">
+      <strong>Vinkki kilpailutilanteeseen:</strong> opeta asiakasta omilla luvuillasi hankintakäynnillä. Näin myyjä osaa haastaa muita välittäjiä hankuilla. Kun asiakas kysyy kilpailevalta "osaatko kertoa oman myyntiajan ja konversioprosenttisi?", ja toinen empii, kilpailu on ohi. Sinun ammattitaitosi näkyy siinä, että luvut ovat valmiina ja selitetty.
+    </div>
+    <div class="script" style="margin-top:14px;">
+      <strong>Valmis sanamuoto · hankun päätös</strong>
+      "Tässä on kolme lukua, jotka kannattaa pyytää jokaiselta välittäjältä jonka tapaatte: oma myyntiaika, monta näyttöä per kauppa ja klousausprosentti toimeksiannosta kauppaan. Minun lukuni ovat tässä — ja kerron mielelläni mihin ne perustuvat."
+    </div>
+  </section>
+
+  <!-- VARASTO -->
+  <section class="slide" data-role="tyokalut">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Työkalut</span> · Varasto läpi kerran kuussa</span><span class="slide-no">8</span></div>
+    <h2>Varaston systemaattinen läpikäynti</h2>
+    <div class="focus-banner success">
+      <strong>Hyvät esimerkit:</strong> Tampere käy varaston läpi kerran kuussa. Kymenlaaksossa tehdään sama — jokaiselle kohteelle toimenpiteet sen kiertämiseen. Tämä ei ole vaikeaa, mutta sen pitää olla kalenterissa — muuten se jää aina ensi kuulle.
+    </div>
+    <div class="three-col">
+      <div class="card">
+        <h3>Kohdekohtainen kysymys</h3>
+        <ul>
+          <li>Mikä on tämän kohteen tila nyt vs. kuukausi sitten?</li>
+          <li>Mitä on tehty — soittoja, viestejä, näyttöjä?</li>
+          <li>Mikä muuttuu seuraavan 30 päivän aikana?</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Toimenpide jokaiseen riviin</h3>
+        <ul>
+          <li>Hinnan tarkistus / korjausliike</li>
+          <li>Aktiivinen kontaktointi näyttökävijöihin</li>
+          <li>Myyjäpalaveri — rehellinen markkinakatsaus</li>
+        </ul>
+      </div>
+      <div class="card taupe">
+        <h3>Miksi kerran kuussa</h3>
+        <ul>
+          <li>Seisova kohde syö provisiomarginaalia joka viikko</li>
+          <li>Hintavirheet huomataan ajoissa — ei neljän kuun jälkeen</li>
+          <li>Välittäjä pysyy itse selvillä omasta varastostaan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="focus-banner warn" style="margin-top:14px;">
+      <strong>Varo näitä:</strong> "kyllä se kohta lähtee" -puhe ei ole toimenpide. Ei riitä, että varasto on näkyvissä — jokaisen kohteen kohdalla pitää olla seuraava teko päivämäärineen. Muuten rivi pysyy muuttumattomana kuukaudesta toiseen.
+    </div>
+  </section>
+
+  <!-- TAMPERE -->
+  <section class="slide" data-role="tiimi">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Tiimi</span> · Tampereen kärki <span class="who">Tampere</span></span><span class="slide-no">9</span></div>
+    <h2>Tampere: mikä erottaa Sarin, Marien ja Mikon muista?</h2>
+    <div class="focus-banner cream">
+      <strong>Kysymys, joka kannattaa itse vastata:</strong> Tampereen kärki tekee asioita systemaattisesti ja siten, että arki on rakennettu niin, että rutiini tekee puolet työstä.
+    </div>
+    <div class="three-col">
+      <div class="tip">
+        <div class="num">Ero 1</div>
+        <h4>Arjen rutiinit kunnossa</h4>
+        <p>Samat toimenpiteet viikosta toiseen. Kun rakenne on valmis, energiaa ei mene miettimiseen — se menee tekemiseen. Ei neroutta, vaan toistoa.</p>
+      </div>
+      <div class="tip">
+        <div class="num">Ero 2</div>
+        <h4>Selkeys työstä ja toimenpiteistä</h4>
+        <p>Jokainen tietää, mitä pitää tehdä juuri tällä viikolla — ei epäselviä "pitäisi soittaa jollekulle". Soitot, näytöt, follow upit on listattu ja tehdään siinä järjestyksessä kuin kalenterissa on.</p>
+      </div>
+      <div class="tip">
+        <div class="num">Ero 3</div>
+        <h4>Ahkeruus</h4>
+        <p>Tehdään perusasiat riittävän monta kertaa, riittävän pitkään. Ei pidetä taukoja huonoilla viikoilla, eikä levätä hyvien viikkojen jälkeen. Kiinni työssä päivä kerrallaan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- YHTEENVETO -->
+  <section class="slide" data-role="tiimi">
+    <div class="role-strip"></div>
+    <div class="slide-header"><span class="eyebrow"><span class="role-tag">Tiimi</span> · Yhteenveto · Tämän viikon teot</span><span class="slide-no">10</span></div>
+    <h2>Toimenpiteet — tee se tällä viikolla</h2>
+    <p class="soft" style="margin-bottom:16px;">Kalenteroi, niin ei tarvitse muistaa. Tee toistoista rutiineja. Valitse yksi kohta, joka osuu siihen missä sinulla on eniten voitettavaa juuri nyt.</p>
+    <div class="kpi-row">
+      <div class="kpi"><div class="num">1</div><div class="lbl">Nopeus</div><div class="sub">Vastaukset valmiiksi — aikaraja seuraavalle yhteydenotolle.</div></div>
+      <div class="kpi"><div class="num">2</div><div class="lbl">Kysyntä</div><div class="sub">Faktat taskuun ennen näyttöä — kaksi konkreettista.</div></div>
+      <div class="kpi"><div class="num">3</div><div class="lbl">Hinta</div><div class="sub">"Mihin teidän hintanne perustuu?" — kokeile kerran.</div></div>
+      <div class="kpi"><div class="num">4</div><div class="lbl">Tarjous</div><div class="sub">"Onko jotain mikä vielä mietityttää, vai tehdäänkö tarjous?" — käytä.</div></div>
+    </div>
+    <div class="two-col" style="margin-top:10px;">
+      <div class="card">
+        <h3>Rutiinin rakentaminen</h3>
+        <ul>
+          <li>Varasto kalenteriin kerran kuussa — päivä ja aika valmiiksi</li>
+          <li>Kodinvaihtosuunnitelma mukaan seuraavaan hankuun</li>
+          <li>Omat tilastot kolmeen lukuun — opettele ne ulkomuistista</li>
+        </ul>
+      </div>
+      <div class="card cream">
+        <h3>Kiitos &amp; seuraava askel</h3>
+        <ul>
+          <li>Kiitos niille, jotka jakoivat oman oppinsa — niistä hyötyy koko Roof</li>
+          <li>Kirjoita itsellesi ylös: mitä kokeilet, mitä opit, mitä viet eteenpäin</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="counter"><span id="current">1</span> / <span id="total">0</span></div>
+<div class="nav">
+  <button onclick="prev()">← Edellinen</button>
+  <button onclick="next()">Seuraava →</button>
+</div>
+
+<script>
+  const allSlides = Array.from(document.querySelectorAll('.slide'));
+  const mobileMQ = window.matchMedia('(max-width: 768px)');
+  let currentRole = 'intro';
+  let idx = 0;
+  function isMobile() { return mobileMQ.matches; }
+  function slidesForRole(role) { return allSlides.filter(s => s.dataset.role === role); }
+  function render() {
+    if (isMobile()) { document.getElementById('current').textContent = ''; document.getElementById('total').textContent = ''; return; }
+    allSlides.forEach(s => s.classList.remove('active'));
+    const set = slidesForRole(currentRole);
+    idx = Math.max(0, Math.min(set.length - 1, idx));
+    set[idx].classList.add('active');
+    document.getElementById('current').textContent = idx + 1;
+    document.getElementById('total').textContent = set.length;
+  }
+  function setRole(role) {
+    currentRole = role; idx = 0;
+    document.querySelectorAll('.role-bar button').forEach(b => b.classList.toggle('active', b.dataset.role === role));
+    if (isMobile()) {
+      const target = allSlides.find(s => s.dataset.role === role);
+      if (target) {
+        const roleBarH = document.querySelector('.role-bar').offsetHeight || 0;
+        const y = target.getBoundingClientRect().top + window.scrollY - roleBarH - 4;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+      return;
+    }
+    render();
+  }
+  function next() {
+    if (isMobile()) return;
+    const set = slidesForRole(currentRole);
+    if (idx < set.length - 1) { idx++; render(); return; }
+    const order = ['intro','klousaus','tyokalut','tiimi'];
+    const i = order.indexOf(currentRole);
+    if (i < order.length - 1) setRole(order[i+1]);
+  }
+  function prev() {
+    if (isMobile()) return;
+    if (idx > 0) { idx--; render(); return; }
+    const order = ['intro','klousaus','tyokalut','tiimi'];
+    const i = order.indexOf(currentRole);
+    if (i > 0) { setRole(order[i-1]); const set = slidesForRole(currentRole); idx = set.length - 1; render(); }
+  }
+  document.addEventListener('keydown', e => {
+    if (isMobile()) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') next();
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') prev();
+    if (e.key === '1') setRole('intro');
+    if (e.key === '2') setRole('klousaus');
+    if (e.key === '3') setRole('tyokalut');
+    if (e.key === '4') setRole('tiimi');
+  });
+  let sx = 0, sy = 0;
+  document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; });
+  document.addEventListener('touchend', e => {
+    if (isMobile()) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < -50) next(); else if (dx > 50) prev();
+  });
+  mobileMQ.addEventListener('change', () => { if (!isMobile()) { idx = 0; render(); } else { allSlides.forEach(s => s.classList.remove('active')); } });
+  render();
+</script>
+</body>
+</html>
