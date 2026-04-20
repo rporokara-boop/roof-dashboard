@@ -704,19 +704,6 @@ function checkAuth(){
     </div>
   </div>
 
-  <div class="palaveri-card" style="padding:18px 24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div>
-        <h2 style="margin-bottom:3px">🔗 Myyntijohtajan Dashboard</h2>
-        <div class="meta" style="margin-bottom:0">Suora linkki jaettavaksi</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <a class="palaveri-btn btn-teal btn-sm" href="https://rporokara-boop.github.io/roof-dashboard/Roof_Myyntijohtajan_Dashboard.html" target="_blank">Avaa dashboard ↗</a>
-        <button class="palaveri-btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('https://rporokara-boop.github.io/roof-dashboard/Roof_Myyntijohtajan_Dashboard.html');this.textContent='✓ Kopioitu!';setTimeout(()=>this.textContent='Kopioi linkki',2000)">Kopioi linkki</button>
-      </div>
-    </div>
-  </div>
-
   <div class="palaveri-card">
     <h2>✉️ Lähetä kutsu esitykseen</h2>
     <div class="meta">Valitse vastaanottajat ja lähetä sähköpostikutsu</div>
@@ -2282,9 +2269,8 @@ function sendInvite(){
   const esitysUrl = netlifyUrl || (window.location.href.replace(/\/[^/]*$/, '/') + esitysFile);
   const to = selected.map(u=>u.email).join(',');
   const subject = encodeURIComponent('Kutsu: Myyntijohdon palaveri');
-  const dashboardUrl = 'https://rporokara-boop.github.io/roof-dashboard/Roof_Myyntijohtajan_Dashboard.html';
   const body = encodeURIComponent(
-    `Hei,\n\nOlet kutsuttu katsomaan myyntijohdon palaverin esitystä:\n\n${esitysUrl}\n\nMyyntijohtajan dashboard:\n${dashboardUrl}\n\nTerveisin,\nRoof LKV`
+    `Hei,\n\nOlet kutsuttu katsomaan myyntijohdon palaverin esitystä:\n\n${esitysUrl}\n\nTerveisin,\nRoof LKV`
   );
   window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
   document.getElementById('inviteStatus').textContent = `Kutsu lähetetty ${selected.length} henkilölle.`;
