@@ -660,20 +660,46 @@ function checkAuth(){
     .esitys-badge{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.06em}
     .badge-live{background:#d1fae5;color:#065f46}
     .badge-old{background:#f3f4f6;color:#6b7280}
+    .btn-netlify{background:#00AD9F;color:#fff}
+    .btn-sm{padding:7px 13px;font-size:.72rem}
+    .btn-danger{background:#fff;color:#dc2626;border:1.5px solid #fecaca}
+    /* Modal */
+    .p-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+    .p-modal-bg.open{display:flex}
+    .p-modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+    .p-modal h3{font-size:.9rem;font-weight:700;color:#003848;margin-bottom:18px}
+    .p-field{margin-bottom:14px}
+    .p-field label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.1em;color:#A09074;margin-bottom:6px}
+    .p-field input,.p-field textarea{width:100%;padding:10px 13px;border:1.5px solid #e8e4dc;border-radius:8px;font-size:.84rem;font-family:inherit;color:#003848;outline:none;transition:border .15s}
+    .p-field input:focus,.p-field textarea:focus{border-color:#28D1CD}
+    .p-field textarea{height:70px;resize:vertical}
+    .p-modal-actions{display:flex;gap:10px;margin-top:18px}
+    /* Netlify result inline */
+    .netlify-result{background:#f0fafa;border:1.5px solid #28D1CD;border-radius:8px;padding:10px 14px;margin-top:8px;font-size:.78rem;color:#003848;display:none;align-items:center;gap:8px;flex-wrap:wrap}
+    .netlify-result a{color:#003848;font-weight:600;word-break:break-all}
+    .netlify-result button{background:#003848;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:.7rem;cursor:pointer;font-family:inherit;flex-shrink:0}
   </style>
 
   <div class="palaveri-card">
-    <h2>📋 Myyntijohdon palaveri</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 style="margin-bottom:0">📋 Myyntijohdon palaveri</h2>
+      <button class="palaveri-btn btn-primary btn-sm" onclick="openLisaaPalaveri()">+ Lisää uusi palaveri</button>
+    </div>
     <div class="meta">Esitysmateriaalit ja kutsut</div>
+    <div class="esitys-list" id="esitysList"></div>
+  </div>
 
-    <div class="esitys-list" id="esitysList">
-      <div class="esitys-item">
-        <div class="esitys-info">
-          <div class="esitys-name">Myyntijohdon palaveri 20.04.2026</div>
-          <div class="esitys-date">Lisätty 19.4.2026 · Kalvot: myynti, pizza-malli, NPS, rekrytointi</div>
-        </div>
-        <span class="esitys-badge badge-live">AKTIIVINEN</span>
-        <a class="palaveri-btn btn-teal" href="Myyntijohdon_palaveri_20.04.2026_kalvot.html" target="_blank">Avaa esitys ↗</a>
+  <!-- Modal: Lisää uusi palaveri -->
+  <div class="p-modal-bg" id="lisaaModal" onclick="if(event.target===this)closeLisaaPalaveri()">
+    <div class="p-modal">
+      <h3>+ Lisää uusi palaveri</h3>
+      <div class="p-field"><label>PALAVERIN NIMI</label><input id="pNimi" placeholder="Esim. Myyntijohdon palaveri 20.04.2026"></div>
+      <div class="p-field"><label>PÄIVÄMÄÄRÄ</label><input id="pPvm" type="date"></div>
+      <div class="p-field"><label>TIEDOSTONIMI (HTML, sama kansio)</label><input id="pFile" placeholder="Esim. Myyntijohdon_palaveri_20.04.2026_kalvot.html"></div>
+      <div class="p-field"><label>KUVAUS (valinnainen)</label><textarea id="pKuvaus" placeholder="Esim. Kalvot: myynti, NPS, rekrytointi"></textarea></div>
+      <div class="p-modal-actions">
+        <button class="palaveri-btn btn-primary" onclick="savePalaveri()">Tallenna</button>
+        <button class="palaveri-btn btn-outline" onclick="closeLisaaPalaveri()">Peruuta</button>
       </div>
     </div>
   </div>
@@ -2102,6 +2128,7 @@ let palaveriInited = false;
 function initPalaveri(){
   if(palaveriInited) return;
   palaveriInited = true;
+  renderEsitysList();
   const list = document.getElementById('inviteList');
   PALAVERI_USERS.forEach((u,i)=>{
     const item = document.createElement('div');
@@ -2131,6 +2158,103 @@ function toggleSelectAll(){
   updateSelectAllBtn();
 }
 
+// ── PALAVERI: ESITYS LIST ─────────────────────────────────────────────────────
+const STATIC_PALAVERIT = [
+  {id:'palaveri-20042026', nimi:'Myyntijohdon palaveri 20.04.2026', pvm:'2026-04-20', tiedosto:'Myyntijohdon_palaveri_20.04.2026_kalvot.html', kuvaus:'Kalvot: myynti, pizza-malli, NPS, rekrytointi', aktiivinen:true}
+];
+
+function getPalaverit(){
+  const stored = JSON.parse(localStorage.getItem('roof_palaverit')||'[]');
+  return [...STATIC_PALAVERIT, ...stored];
+}
+
+function renderEsitysList(){
+  const list = document.getElementById('esitysList');
+  if(!list) return;
+  const palaverit = getPalaverit();
+  const select = document.getElementById('esitysSelect');
+  if(select){ select.innerHTML = palaverit.map(p=>`<option value="${p.tiedosto}">${p.nimi}</option>`).join(''); }
+  list.innerHTML = palaverit.map(p=>{
+    const netlifyUrl = localStorage.getItem('netlify_url_'+p.tiedosto)||'';
+    const badge = p.aktiivinen ? '<span class="esitys-badge badge-live">AKTIIVINEN</span>' : '<span class="esitys-badge badge-old">ARKISTO</span>';
+    const deleteBtn = p.id.startsWith('palaveri-custom-') ? `<button class="palaveri-btn btn-danger btn-sm" onclick="deletePalaveri('${p.id}')">Poista</button>` : '';
+    return `<div class="esitys-item" id="item-${p.id}">
+      <div class="esitys-info">
+        <div class="esitys-name">${p.nimi}</div>
+        <div class="esitys-date">Lisätty ${p.pvm}${p.kuvaus?' · '+p.kuvaus:''}</div>
+      </div>
+      ${badge}
+      <a class="palaveri-btn btn-teal btn-sm" href="${p.tiedosto}" target="_blank">Avaa ↗</a>
+      <button class="palaveri-btn btn-netlify btn-sm" onclick="julkaisePalaveri('${p.id}','${p.tiedosto}',this)">🌐 Julkaise</button>
+      ${deleteBtn}
+    </div>
+    <div class="netlify-result" id="netlify-${p.id}" style="${netlifyUrl?'display:flex':'display:none'}">
+      ${netlifyUrl?`🌐 <a href="${netlifyUrl}" target="_blank">${netlifyUrl}</a><button onclick="navigator.clipboard.writeText('${netlifyUrl}');this.textContent='✓ Kopioitu!'">Kopioi</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openLisaaPalaveri(){
+  document.getElementById('pPvm').value = new Date().toISOString().slice(0,10);
+  document.getElementById('lisaaModal').classList.add('open');
+}
+function closeLisaaPalaveri(){ document.getElementById('lisaaModal').classList.remove('open'); }
+
+function savePalaveri(){
+  const nimi = document.getElementById('pNimi').value.trim();
+  const pvm  = document.getElementById('pPvm').value;
+  const file = document.getElementById('pFile').value.trim();
+  const kuvaus = document.getElementById('pKuvaus').value.trim();
+  if(!nimi||!file){ alert('Täytä nimi ja tiedostonimi.'); return; }
+  const stored = JSON.parse(localStorage.getItem('roof_palaverit')||'[]');
+  stored.unshift({id:'palaveri-custom-'+Date.now(), nimi, pvm, tiedosto:file, kuvaus, aktiivinen:true});
+  localStorage.setItem('roof_palaverit', JSON.stringify(stored));
+  closeLisaaPalaveri();
+  renderEsitysList();
+}
+
+function deletePalaveri(id){
+  if(!confirm('Poistetaanko palaveri?')) return;
+  let stored = JSON.parse(localStorage.getItem('roof_palaverit')||'[]');
+  stored = stored.filter(p=>p.id!==id);
+  localStorage.setItem('roof_palaverit', JSON.stringify(stored));
+  renderEsitysList();
+}
+
+async function julkaisePalaveri(id, tiedosto, btn){
+  const TOKEN='nfp_ZnmxfTgqKY3SsHR92GTo8K8ynqo47hoK6975';
+  const resultEl = document.getElementById('netlify-'+id);
+  btn.textContent='⏳...'; btn.disabled=true;
+  try {
+    // Fetch the HTML file
+    const baseUrl = window.location.href.replace(/[^/]*$/, '');
+    const resp = await fetch(baseUrl + tiedosto);
+    if(!resp.ok) throw new Error('Tiedostoa ei löydy: '+tiedosto);
+    const html = await resp.text();
+    const enc = new TextEncoder();
+    const data = enc.encode(html);
+    const hashBuf = await crypto.subtle.digest('SHA-1', data);
+    const sha1 = Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    const siteName = 'roof-palaveri-'+Date.now();
+    const siteR = await fetch('https://api.netlify.com/api/v1/sites',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({name:siteName})});
+    if(!siteR.ok) throw new Error('Sivuston luonti epäonnistui');
+    const site = await siteR.json();
+    const depR = await fetch('https://api.netlify.com/api/v1/sites/'+site.id+'/deploys',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},body:JSON.stringify({files:{'index.html':sha1}})});
+    if(!depR.ok) throw new Error('Deploy epäonnistui');
+    const dep = await depR.json();
+    const upR = await fetch('https://api.netlify.com/api/v1/deploys/'+dep.id+'/files/index.html',{method:'PUT',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/octet-stream','Content-Length':data.length},body:data});
+    if(!upR.ok) throw new Error('Tiedoston lähetys epäonnistui');
+    const url = 'https://'+siteName+'.netlify.app';
+    localStorage.setItem('netlify_url_'+tiedosto, url);
+    resultEl.style.display='flex';
+    resultEl.innerHTML = `🌐 <a href="${url}" target="_blank">${url}</a><button onclick="navigator.clipboard.writeText('${url}');this.textContent='✓ Kopioitu!'">Kopioi</button>`;
+    btn.textContent='✓ Julkaistu'; btn.disabled=false;
+  } catch(e){
+    btn.textContent='🌐 Julkaise'; btn.disabled=false;
+    alert('Virhe: '+e.message);
+  }
+}
+
 function sendInvite(){
   const selected = [];
   document.querySelectorAll('#inviteList input[type=checkbox]').forEach((b,i)=>{
@@ -2141,7 +2265,8 @@ function sendInvite(){
     return;
   }
   const esitysFile = document.getElementById('esitysSelect').value;
-  const esitysUrl = window.location.href.replace(/\/[^/]*$/, '/') + esitysFile;
+  const netlifyUrl = localStorage.getItem('netlify_url_'+esitysFile);
+  const esitysUrl = netlifyUrl || (window.location.href.replace(/\/[^/]*$/, '/') + esitysFile);
   const to = selected.map(u=>u.email).join(',');
   const subject = encodeURIComponent('Kutsu: Myyntijohdon palaveri');
   const body = encodeURIComponent(
