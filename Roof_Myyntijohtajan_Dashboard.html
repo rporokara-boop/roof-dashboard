@@ -695,8 +695,10 @@ function checkAuth(){
       <h3>+ Lisää uusi palaveri</h3>
       <div class="p-field"><label>PALAVERIN NIMI</label><input id="pNimi" placeholder="Esim. Myyntijohdon palaveri 20.04.2026"></div>
       <div class="p-field"><label>PÄIVÄMÄÄRÄ</label><input id="pPvm" type="date"></div>
-      <div class="p-field"><label>TIEDOSTONIMI (HTML, sama kansio)</label><input id="pFile" placeholder="Esim. Myyntijohdon_palaveri_20.04.2026_kalvot.html"></div>
+      <div class="p-field"><label>LATAA HTML-TIEDOSTO</label><input id="pFileUpload" type="file" accept=".html" onchange="pFileChosen(this)" style="padding:8px 0;border:none;background:none;color:#003848;cursor:pointer"></div>
+      <div class="p-field"><label>TIEDOSTONIMI (täyttyy automaattisesti)</label><input id="pFile" placeholder="Esim. Myyntijohdon_palaveri_20.04.2026_kalvot.html" readonly style="background:#f5f3ef;color:#A09074"></div>
       <div class="p-field"><label>KUVAUS (valinnainen)</label><textarea id="pKuvaus" placeholder="Esim. Kalvot: myynti, NPS, rekrytointi"></textarea></div>
+      <div class="p-field"><label>GITHUB TOKEN (tallennetaan selaimeen)</label><input id="pGhToken" type="password" placeholder="ghp_..."></div>
       <div class="p-modal-actions">
         <button class="palaveri-btn btn-primary" onclick="savePalaveri()">Tallenna</button>
         <button class="palaveri-btn btn-outline" onclick="closeLisaaPalaveri()">Peruuta</button>
@@ -2194,23 +2196,57 @@ function renderEsitysList(){
   }).join('');
 }
 
-function openLisaaPalaveri(){
-  document.getElementById('pPvm').value = new Date().toISOString().slice(0,10);
-  document.getElementById('lisaaModal').classList.add('open');
-}
+
 function closeLisaaPalaveri(){ document.getElementById('lisaaModal').classList.remove('open'); }
 
-function savePalaveri(){
-  const nimi = document.getElementById('pNimi').value.trim();
-  const pvm  = document.getElementById('pPvm').value;
-  const file = document.getElementById('pFile').value.trim();
+function pFileChosen(input){
+  if(input.files[0]) document.getElementById('pFile').value = input.files[0].name;
+}
+
+function openLisaaPalaveri(){
+  document.getElementById('pPvm').value = new Date().toISOString().slice(0,10);
+  document.getElementById('pGhToken').value = localStorage.getItem('roof_gh_token')||'';
+  document.getElementById('lisaaModal').classList.add('open');
+}
+
+async function savePalaveri(){
+  const nimi   = document.getElementById('pNimi').value.trim();
+  const pvm    = document.getElementById('pPvm').value;
+  const file   = document.getElementById('pFile').value.trim();
   const kuvaus = document.getElementById('pKuvaus').value.trim();
-  if(!nimi||!file){ alert('Täytä nimi ja tiedostonimi.'); return; }
-  const stored = JSON.parse(localStorage.getItem('roof_palaverit')||'[]');
-  stored.unshift({id:'palaveri-custom-'+Date.now(), nimi, pvm, tiedosto:file, kuvaus, aktiivinen:true});
-  localStorage.setItem('roof_palaverit', JSON.stringify(stored));
-  closeLisaaPalaveri();
-  renderEsitysList();
+  const token  = document.getElementById('pGhToken').value.trim();
+  const fileInput = document.getElementById('pFileUpload');
+  if(!nimi||!file){ alert('Täytä nimi ja valitse tiedosto.'); return; }
+  if(token) localStorage.setItem('roof_gh_token', token);
+
+  const saveBtn = document.querySelector('#lisaaModal .palaveri-btn.btn-primary');
+  saveBtn.textContent='⏳ Tallennetaan...'; saveBtn.disabled=true;
+
+  try {
+    if(fileInput.files[0] && token){
+      const txt = await fileInput.files[0].text();
+      const b64 = btoa(unescape(encodeURIComponent(txt)));
+      const resp = await fetch('https://api.github.com/repos/rporokara-boop/roof-dashboard/contents/'+encodeURIComponent(file),{
+        method:'PUT',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+        body:JSON.stringify({message:'Add palaveri: '+nimi, content:b64})
+      });
+      if(!resp.ok){ const err=await resp.json(); throw new Error(err.message||resp.status); }
+    } else if(fileInput.files[0] && !token){
+      alert('Anna GitHub token tiedoston lataamiseksi GitHubiin.');
+      saveBtn.textContent='Tallenna'; saveBtn.disabled=false;
+      return;
+    }
+    const stored = JSON.parse(localStorage.getItem('roof_palaverit')||'[]');
+    stored.unshift({id:'palaveri-custom-'+Date.now(), nimi, pvm, tiedosto:file, kuvaus, aktiivinen:true});
+    localStorage.setItem('roof_palaverit', JSON.stringify(stored));
+    closeLisaaPalaveri();
+    renderEsitysList();
+  } catch(e){
+    alert('Virhe tallennuksessa: '+e.message);
+  } finally {
+    saveBtn.textContent='Tallenna'; saveBtn.disabled=false;
+  }
 }
 
 function deletePalaveri(id){
