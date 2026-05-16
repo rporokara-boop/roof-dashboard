@@ -1581,8 +1581,11 @@ function buildOverview(){
   A.forEach(a=>{(a.myynti_monthly||[]).forEach((v,i)=>{if(v>0&&i>lastMo)lastMo=i;});
                 (a.tapaamiset_monthly||[]).forEach((v,i)=>{if(v>0&&i>lastMo)lastMo=i;});});
   const moElapsed = lastMo+1;
-  // Average keskipalkkio: weighted (sum myynti / sum kaupat) if any kaupat
-  const keskipalkkio = totKaupat>0 ? totMyynti/totKaupat : 0;
+  // Tap→Kauppa % ja Keskipalkkio: keskiarvo statsit yhteenveto -välilehden per-välittäjä-arvoista (gid 1979538260)
+  const tapKauppaVals = A.map(a=>a.tap_kauppa).filter(v=>v!=null&&v>0);
+  const avgTapKauppa = tapKauppaVals.length ? tapKauppaVals.reduce((s,v)=>s+v,0)/tapKauppaVals.length : 0;
+  const palkkioVals = A.map(a=>a.ag_palkkio).filter(v=>v!=null&&v>0);
+  const keskipalkkio = palkkioVals.length ? palkkioVals.reduce((s,v)=>s+v,0)/palkkioVals.length : 0;
   // Format helpers
   const fmtM = v => (v/1e6).toFixed(2).replace('.',',')+' M€';
   const fmtN = v => Math.round(v).toLocaleString('fi-FI');
@@ -1597,7 +1600,7 @@ function buildOverview(){
   set('kpiToimPct', totTap>0 ? fmtP(totToim/totTap*100)+' tapaamisista' : '—');
   set('kpiKaupat', fmtN(totKaupat));
   set('kpiKaupatPct', totToim>0 ? fmtP(totKaupat/totToim*100)+' toimareista' : '—');
-  set('kpiTapKauppa', totTap>0 ? fmtP(totKaupat/totTap*100) : '—');
+  set('kpiTapKauppa', avgTapKauppa>0 ? fmtP(avgTapKauppa) : '—');
   set('kpiTapKauppaSub', 'Tavoite 225/kk');
   set('kpiKp', keskipalkkio>0 ? fmtE(keskipalkkio) : '—');
   set('kpiKpSub', 'Tavoite 5 100€');
