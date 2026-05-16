@@ -1434,6 +1434,9 @@ async function loadFromSheets(){
       if(allRows[26] && allRows[26][13]){
         D.konserniKeskipalkkio = parseFinNum(allRows[26][13]);
       }
+      if(allRows[26] && allRows[26][9]){
+        D.konserniTapKauppa = parsePct(allRows[26][9]);
+      }
     }
     // Parse kohdemäärät (GID 791295824) — monthly "Kohteet netissä" per office
     if(t8){
@@ -1589,8 +1592,11 @@ function buildOverview(){
                 (a.tapaamiset_monthly||[]).forEach((v,i)=>{if(v>0&&i>lastMo)lastMo=i;});});
   const moElapsed = lastMo+1;
   // Tap→Kauppa % ja Keskipalkkio: keskiarvo statsit yhteenveto -välilehden per-välittäjä-arvoista (gid 1979538260)
+  // Tap→Kauppa %: ota suoraan gid 791295824 J27 (konserni-tason toteuma) jos saatavilla
   const tapKauppaVals = A.map(a=>a.tap_kauppa).filter(v=>v!=null&&v>0);
-  const avgTapKauppa = tapKauppaVals.length ? tapKauppaVals.reduce((s,v)=>s+v,0)/tapKauppaVals.length : 0;
+  const avgTapKauppa = D.konserniTapKauppa>0
+    ? D.konserniTapKauppa
+    : (tapKauppaVals.length ? tapKauppaVals.reduce((s,v)=>s+v,0)/tapKauppaVals.length : 0);
   // Keskipalkkio: ota suoraan gid 791295824 N27 (konserni-tason toteuma) jos saatavilla
   const palkkioVals = A.map(a=>a.ag_palkkio).filter(v=>v!=null&&v>0);
   const keskipalkkio = D.konserniKeskipalkkio>0
