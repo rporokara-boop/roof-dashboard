@@ -312,12 +312,12 @@ function checkAuth(){
 <!-- ═══════════ PAGE: OVERVIEW ═══════════ -->
 <div class="page active" id="page-overview">
   <div class="kpi-strip">
-    <div class="kpi"><div class="kpi-label">Kokonaismyynti</div><div class="kpi-val">2,80 M€</div><div class="kpi-sub">Kumulatiivinen YTD</div><span class="pill neu">Vauhti 11,2 M€/v</span></div>
-    <div class="kpi blue"><div class="kpi-label">Tapaamiset</div><div class="kpi-val">2 642</div><div class="kpi-sub">YTD yhteensä</div><span class="pill neu">7,7 kk / välittäjä</span></div>
-    <div class="kpi"><div class="kpi-label">Toimeksiannot</div><div class="kpi-val">1 318</div><div class="kpi-sub">Myyntitoimarit YTD</div><span class="pill warn">49,9% tapaamisista</span></div>
-    <div class="kpi green"><div class="kpi-label">Kaupat</div><div class="kpi-val">573</div><div class="kpi-sub">Toteutuneet YTD</div><span class="pill good">43,5% toimareista</span></div>
-    <div class="kpi yellow"><div class="kpi-label">Tap→Kauppa</div><div class="kpi-val">21,7%</div><div class="kpi-sub">Konsernin konversio</div><span class="pill warn">Tavoite 225/kk</span></div>
-    <div class="kpi red"><div class="kpi-label">Keskipalkkio</div><div class="kpi-val">4 715€</div><div class="kpi-sub">Kauppojen ka.</div><span class="pill bad">Tavoite 5 100€</span></div>
+    <div class="kpi"><div class="kpi-label">Kokonaismyynti</div><div class="kpi-val" id="kpiMyynti">—</div><div class="kpi-sub">Kumulatiivinen YTD</div><span class="pill neu" id="kpiVauhti">—</span></div>
+    <div class="kpi blue"><div class="kpi-label">Tapaamiset</div><div class="kpi-val" id="kpiTap">—</div><div class="kpi-sub">YTD yhteensä</div><span class="pill neu" id="kpiTapPerVal">—</span></div>
+    <div class="kpi"><div class="kpi-label">Toimeksiannot</div><div class="kpi-val" id="kpiToim">—</div><div class="kpi-sub">Myyntitoimarit YTD</div><span class="pill warn" id="kpiToimPct">—</span></div>
+    <div class="kpi green"><div class="kpi-label">Kaupat</div><div class="kpi-val" id="kpiKaupat">—</div><div class="kpi-sub">Toteutuneet YTD</div><span class="pill good" id="kpiKaupatPct">—</span></div>
+    <div class="kpi yellow"><div class="kpi-label">Tap→Kauppa</div><div class="kpi-val" id="kpiTapKauppa">—</div><div class="kpi-sub">Konsernin konversio</div><span class="pill warn" id="kpiTapKauppaSub">—</span></div>
+    <div class="kpi red"><div class="kpi-label">Keskipalkkio</div><div class="kpi-val" id="kpiKp">—</div><div class="kpi-sub">Kauppojen ka.</div><span class="pill bad" id="kpiKpSub">Tavoite 5 100€</span></div>
   </div>
 
   <div class="row">
@@ -1566,6 +1566,43 @@ async function loadFromSheets(){
     // Always mark as loaded (either fresh or cached)
   }
 }
+function buildOverview(){
+  const A = Object.values(D.agents||{});
+  if(!A.length) return;
+  const totMyynti = A.reduce((s,a)=>s+(a.myynti||0),0);
+  const totVauhti = A.reduce((s,a)=>s+(a.vauhti||0),0);
+  const totTap    = A.reduce((s,a)=>s+(a.tapaamiset||0),0);
+  const totToim   = A.reduce((s,a)=>s+(a.toimeksiannot||0),0);
+  const totKaupat = A.reduce((s,a)=>s+(a.kaupat||0),0);
+  // active välittäjät = those with myynti or tapaamiset
+  const active = A.filter(a=>(a.myynti||0)>0||(a.tapaamiset||0)>0).length||1;
+  // months elapsed in current year (based on latest month with data)
+  let lastMo=0;
+  A.forEach(a=>{(a.myynti_monthly||[]).forEach((v,i)=>{if(v>0&&i>lastMo)lastMo=i;});
+                (a.tapaamiset_monthly||[]).forEach((v,i)=>{if(v>0&&i>lastMo)lastMo=i;});});
+  const moElapsed = lastMo+1;
+  // Average keskipalkkio: weighted (sum myynti / sum kaupat) if any kaupat
+  const keskipalkkio = totKaupat>0 ? totMyynti/totKaupat : 0;
+  // Format helpers
+  const fmtM = v => (v/1e6).toFixed(2).replace('.',',')+' M€';
+  const fmtN = v => Math.round(v).toLocaleString('fi-FI');
+  const fmtP = v => (v).toFixed(1).replace('.',',')+'%';
+  const fmtE = v => Math.round(v).toLocaleString('fi-FI')+'€';
+  const set = (id,t) => { const el=document.getElementById(id); if(el) el.textContent=t; };
+  set('kpiMyynti', fmtM(totMyynti));
+  set('kpiVauhti', 'Vauhti '+fmtM(totVauhti)+'/v');
+  set('kpiTap', fmtN(totTap));
+  set('kpiTapPerVal', (totTap/active/Math.max(moElapsed,1)).toFixed(1).replace('.',',')+' kk / välittäjä');
+  set('kpiToim', fmtN(totToim));
+  set('kpiToimPct', totTap>0 ? fmtP(totToim/totTap*100)+' tapaamisista' : '—');
+  set('kpiKaupat', fmtN(totKaupat));
+  set('kpiKaupatPct', totToim>0 ? fmtP(totKaupat/totToim*100)+' toimareista' : '—');
+  set('kpiTapKauppa', totTap>0 ? fmtP(totKaupat/totTap*100) : '—');
+  set('kpiTapKauppaSub', 'Tavoite 225/kk');
+  set('kpiKp', keskipalkkio>0 ? fmtE(keskipalkkio) : '—');
+  set('kpiKpSub', 'Tavoite 5 100€');
+}
+
 loadFromSheets().then(()=>{
   // Refresh data-dependent views regardless of active tab
   if(typeof renderAg==='function') renderAg();
