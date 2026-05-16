@@ -1506,7 +1506,7 @@ async function loadFromSheets(){
     });
     // Update D.offices with all metrics and computed conversion rates
     Object.keys(offAgg).forEach(o=>{
-      if(!D.offices[o])return;
+      if(!D.offices[o])D.offices[o]={};
       D.offices[o].myynti=Math.round(offAgg[o].myynti);
       D.offices[o].vauhti=Math.round(offAgg[o].vauhti);
       D.offices[o].tapaamiset=offAgg[o].tapaamiset;
