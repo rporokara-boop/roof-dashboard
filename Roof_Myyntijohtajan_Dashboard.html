@@ -305,6 +305,7 @@ function checkAuth(){
   <div class="nav-tab" onclick="showPage('kohteet',this)">📦 Kohteet</div>
   <div class="nav-tab" onclick="showPage('agents',this)">👤 Välittäjät</div>
   <div class="nav-tab" onclick="showPage('rankings',this)">🏆 Rankingt</div>
+  <div class="nav-tab" onclick="showPage('pyynti',this)">💸 Pyynti vs Toteutunut</div>
   <div class="nav-tab" onclick="showPage('palaveri',this)">📋 Palaveri</div>
   <div class="nav-tab" onclick="showPage('yhteenvedot',this)">📄 Yhteenvedot</div>
 </div>
@@ -514,6 +515,135 @@ function checkAuth(){
     <div><div class="sh" style="margin-bottom:10px">📋 Top 10 Tapaamiset</div><ul class="rlist" id="rMeet"></ul></div>
     <div><div class="sh" style="margin-bottom:10px">🎯 Top 10 Toimek.% (min. 10 pal.)</div><ul class="rlist" id="rAsked"></ul></div>
   </div>
+</div>
+
+<div class="page" id="page-pyynti">
+  <style>
+    .pv-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+    .pv-kpi{background:#fff;border-radius:14px;border:1.5px solid #e8e4dc;padding:18px 20px;border-left:4px solid #28D1CD}
+    .pv-kpi.navy{border-left-color:#003848}
+    .pv-kpi.warm{border-left-color:#A09074}
+    .pv-kpi.red{border-left-color:#dc2626}
+    .pv-kpi-label{font-size:.66rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#A09074;margin-bottom:6px}
+    .pv-kpi-val{font-size:1.7rem;font-weight:900;letter-spacing:-.03em;line-height:1;color:#003848}
+    .pv-kpi-sub{font-size:.72rem;color:#A09074;margin-top:5px}
+    .pv-card{background:#fff;border-radius:14px;border:1.5px solid #e8e4dc;padding:24px;margin-bottom:18px}
+    .pv-card-title{font-size:.9rem;font-weight:700;color:#003848;margin-bottom:4px}
+    .pv-card-meta{font-size:.74rem;color:#A09074;margin-bottom:16px}
+    .pv-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+    .pv-controls input,.pv-controls select{padding:9px 13px;border:1.5px solid #e8e4dc;border-radius:8px;font-size:.82rem;font-family:inherit;color:#003848;outline:none;background:#fff}
+    .pv-controls input:focus,.pv-controls select:focus{border-color:#28D1CD}
+    .pv-controls input{min-width:200px}
+    .pv-controls .lbl{font-size:.7rem;font-weight:700;letter-spacing:.14em;color:#A09074;text-transform:uppercase}
+    .pv-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+    .pv-table th{font-size:.64rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#A09074;padding:10px 8px;text-align:left;border-bottom:2px solid #e8e4dc;cursor:pointer;white-space:nowrap;user-select:none}
+    .pv-table th:hover{color:#28D1CD}
+    .pv-table th.num{text-align:right}
+    .pv-table th .sn{color:#28D1CD;margin-left:4px;font-weight:900}
+    .pv-table td{padding:9px 8px;font-size:.82rem;color:#003848;border-bottom:1px solid #f0ebe2}
+    .pv-table td.num{text-align:right}
+    .pv-table tbody tr:hover{background:#f9f6f1}
+    .pv-toim{font-size:.7rem;color:#A09074}
+    .pv-ero-neg{color:#dc2626;font-weight:700}
+    .pv-ero-pos{color:#16a34a;font-weight:700}
+    .pv-ero-zero{color:#A09074}
+    .pv-bar-bg{display:inline-block;width:60px;height:6px;background:#f0ebe2;border-radius:3px;vertical-align:middle;margin-right:6px;overflow:hidden}
+    .pv-bar-fill{display:block;height:100%;background:#28D1CD;border-radius:3px}
+  </style>
+
+  <div class="pv-kpis">
+    <div class="pv-kpi"><div class="pv-kpi-label">Välittäjiä</div><div class="pv-kpi-val" id="pvKpiVal">—</div><div class="pv-kpi-sub">vähintään 3 kohdetta</div></div>
+    <div class="pv-kpi navy"><div class="pv-kpi-label">Myydyt kohteet</div><div class="pv-kpi-val" id="pvKpiKohteet">—</div><div class="pv-kpi-sub">yhteensä analyysissä</div></div>
+    <div class="pv-kpi red"><div class="pv-kpi-label">Ero pyyntiin ka.</div><div class="pv-kpi-val" id="pvKpiEro">—</div><div class="pv-kpi-sub">konsernin keskiarvo</div></div>
+    <div class="pv-kpi warm"><div class="pv-kpi-label">Hinnankorjauksia</div><div class="pv-kpi-val" id="pvKpiKorj">—</div><div class="pv-kpi-sub">keskim. per kohde</div></div>
+  </div>
+
+  <div class="pv-card">
+    <div class="pv-card-title">Välittäjäkohtainen tilastot</div>
+    <div class="pv-card-meta">Lähde: Linear + Oikotie scraper · päivitetty 26.05.2026 · klikkaa sarakeotsikkoa lajitellaksesi</div>
+
+    <div class="pv-controls">
+      <span class="lbl">Hae:</span>
+      <input id="pvSearch" placeholder="Nimi tai toimipiste..." oninput="pvRender()">
+      <span class="lbl">Toimipiste:</span>
+      <select id="pvFilterOff" onchange="pvRender()"><option value="">Kaikki</option></select>
+      <span class="lbl">Min. kohteet:</span>
+      <select id="pvMinKoh" onchange="pvRender()">
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+      </select>
+    </div>
+
+    <table class="pv-table">
+      <thead><tr>
+        <th onclick="pvSort('nimi')">Välittäjä <span class="sn" id="pv-s-nimi"></span></th>
+        <th onclick="pvSort('kohteet')" class="num">Kohteet <span class="sn" id="pv-s-kohteet"></span></th>
+        <th onclick="pvSort('avg_pyynti')" class="num">Pyynti ka. <span class="sn" id="pv-s-avg_pyynti"></span></th>
+        <th onclick="pvSort('avg_tote')" class="num">Toteutunut ka. <span class="sn" id="pv-s-avg_tote"></span></th>
+        <th onclick="pvSort('avg_ero_pros')" class="num">Ero pyyntiin <span class="sn" id="pv-s-avg_ero_pros"></span></th>
+        <th onclick="pvSort('avg_korj')" class="num">Korjauksia / kohde <span class="sn" id="pv-s-avg_korj"></span></th>
+      </tr></thead>
+      <tbody id="pvBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+  const PYYNTI_DATA = [{"nimi": "Karri Rytilahti", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 91, "avg_pyynti": 301297, "avg_tote": 289864, "avg_ero_pros": -3.78, "avg_korj": 0.2}, {"nimi": "Joel Vehkalahti", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 65, "avg_pyynti": 167635, "avg_tote": 162157, "avg_ero_pros": -4.01, "avg_korj": 0.43}, {"nimi": "Jukka-Pekka Halunen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 63, "avg_pyynti": 149086, "avg_tote": 141325, "avg_ero_pros": -6.16, "avg_korj": 0.35}, {"nimi": "Taneli Ollila", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 61, "avg_pyynti": 194659, "avg_tote": 184804, "avg_ero_pros": -5.71, "avg_korj": 0.44}, {"nimi": "Lauri Kuusela", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 60, "avg_pyynti": 296647, "avg_tote": 276854, "avg_ero_pros": -7.4, "avg_korj": 0.28}, {"nimi": "Maarit Nissilä", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 59, "avg_pyynti": 211305, "avg_tote": 203602, "avg_ero_pros": -3.57, "avg_korj": 0.29}, {"nimi": "Lauri Lotvonen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 55, "avg_pyynti": 160709, "avg_tote": 153318, "avg_ero_pros": -5.56, "avg_korj": 0.33}, {"nimi": "Janne Halunen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 41, "avg_pyynti": 176951, "avg_tote": 171790, "avg_ero_pros": -4.93, "avg_korj": 0.34}, {"nimi": "Pauliina Alatarvas", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 35, "avg_pyynti": 152586, "avg_tote": 147936, "avg_ero_pros": -3.75, "avg_korj": 0.29}, {"nimi": "Kati Mäkinen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 35, "avg_pyynti": 239571, "avg_tote": 227486, "avg_ero_pros": -4.59, "avg_korj": 0.34}, {"nimi": "Arja Alakopsa", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 33, "avg_pyynti": 132561, "avg_tote": 127752, "avg_ero_pros": -4.43, "avg_korj": 0.21}, {"nimi": "Miikka Heikkala", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 30, "avg_pyynti": 183563, "avg_tote": 172867, "avg_ero_pros": -6.38, "avg_korj": 0.43}, {"nimi": "Laura Lyttinen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 30, "avg_pyynti": 152633, "avg_tote": 147600, "avg_ero_pros": -5.34, "avg_korj": 0.5}, {"nimi": "Santeri Carlsson", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 27, "avg_pyynti": 333144, "avg_tote": 316574, "avg_ero_pros": -5.1, "avg_korj": 0.07}, {"nimi": "Can Zhang", "toimipiste": "Roof Hyvinkää | ROOF Group Oy", "kohteet": 25, "avg_pyynti": 293040, "avg_tote": 280400, "avg_ero_pros": -4.93, "avg_korj": 0.12}, {"nimi": "Sari Uusitalo", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 23, "avg_pyynti": 274739, "avg_tote": 261609, "avg_ero_pros": -4.57, "avg_korj": 0.17}, {"nimi": "Juhani Hiironen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 22, "avg_pyynti": 137773, "avg_tote": 130859, "avg_ero_pros": -5.7, "avg_korj": 0.36}, {"nimi": "Stefan von Harpe", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 22, "avg_pyynti": 391409, "avg_tote": 368216, "avg_ero_pros": -5.79, "avg_korj": 0.09}, {"nimi": "Miko Rikala", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 21, "avg_pyynti": 359667, "avg_tote": 345286, "avg_ero_pros": -4.33, "avg_korj": 0.19}, {"nimi": "Petri Kajaan", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 20, "avg_pyynti": 245950, "avg_tote": 233125, "avg_ero_pros": -5.34, "avg_korj": 0.1}, {"nimi": "Mira Järvinen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 20, "avg_pyynti": 222900, "avg_tote": 213960, "avg_ero_pros": -3.36, "avg_korj": 0.1}, {"nimi": "Marie Karukoski", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 17, "avg_pyynti": 224994, "avg_tote": 214749, "avg_ero_pros": -5.34, "avg_korj": 0.29}, {"nimi": "Terhi Marjakangas", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 17, "avg_pyynti": 163706, "avg_tote": 157118, "avg_ero_pros": -3.47, "avg_korj": 0.47}, {"nimi": "Heidi Niemi", "toimipiste": "Roof Kouvola | ROOF LKV Kymenlaakso Oy", "kohteet": 17, "avg_pyynti": 167647, "avg_tote": 159412, "avg_ero_pros": -5.48, "avg_korj": 0.12}, {"nimi": "Taru Tuukkanen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 16, "avg_pyynti": 291688, "avg_tote": 272250, "avg_ero_pros": -7.0, "avg_korj": 0.31}, {"nimi": "Valtteri Parikka", "toimipiste": "Roof Järvenpää | ROOF LKV Keski-Uusimaa Oy", "kohteet": 16, "avg_pyynti": 237492, "avg_tote": 228120, "avg_ero_pros": -3.19, "avg_korj": 0.69}, {"nimi": "Marie Ahola", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 16, "avg_pyynti": 274812, "avg_tote": 257000, "avg_ero_pros": -6.52, "avg_korj": 0.31}, {"nimi": "Katja Wilhola", "toimipiste": "Roof Satakunta | ROOF LKV Satakunta Oy", "kohteet": 15, "avg_pyynti": 158400, "avg_tote": 151667, "avg_ero_pros": -4.89, "avg_korj": 0.07}, {"nimi": "Harto Pasonen", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 15, "avg_pyynti": 232400, "avg_tote": 208367, "avg_ero_pros": -9.65, "avg_korj": 0.33}, {"nimi": "Mikko Anttikoski", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 15, "avg_pyynti": 203067, "avg_tote": 190367, "avg_ero_pros": -6.74, "avg_korj": 0.27}, {"nimi": "Sami Pelkonen", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 15, "avg_pyynti": 435933, "avg_tote": 419633, "avg_ero_pros": -3.49, "avg_korj": 0.13}, {"nimi": "Jaakko Simola", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 14, "avg_pyynti": 192714, "avg_tote": 187714, "avg_ero_pros": -3.05, "avg_korj": 0.14}, {"nimi": "Juha Lehtonen", "toimipiste": "Roof Salo | ROOF LKV Varsinais-Suomi Oy", "kohteet": 13, "avg_pyynti": 162923, "avg_tote": 147923, "avg_ero_pros": -8.39, "avg_korj": 0.08}, {"nimi": "Sari Välimaa", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 13, "avg_pyynti": 242538, "avg_tote": 223995, "avg_ero_pros": -8.38, "avg_korj": 0.23}, {"nimi": "Alex Salo", "toimipiste": "Roof Satakunta | ROOF LKV Satakunta Oy", "kohteet": 13, "avg_pyynti": 179615, "avg_tote": 165423, "avg_ero_pros": -9.32, "avg_korj": 0.85}, {"nimi": "Sari Rossi", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 13, "avg_pyynti": 348154, "avg_tote": 333937, "avg_ero_pros": -4.76, "avg_korj": 0.08}, {"nimi": "Tomi Huusari", "toimipiste": "Roof Kouvola | ROOF LKV Kymenlaakso Oy", "kohteet": 13, "avg_pyynti": 154808, "avg_tote": 151731, "avg_ero_pros": -1.62, "avg_korj": 0.08}, {"nimi": "Marju Jänkälä", "toimipiste": "Roof Hyvinkää | ROOF LKV Keski-Uusimaa Oy", "kohteet": 12, "avg_pyynti": 184833, "avg_tote": 176333, "avg_ero_pros": -6.27, "avg_korj": 0.17}, {"nimi": "Eddi Holmberg", "toimipiste": "Roof Tammisaari | ROOF LKV Etelä/Syd Oy Ab", "kohteet": 11, "avg_pyynti": 139000, "avg_tote": 126136, "avg_ero_pros": -8.24, "avg_korj": 0.09}, {"nimi": "Rolle Himmelroos", "toimipiste": "Roof Karjaa | ROOF LKV Etelä/Syd Oy Ab", "kohteet": 11, "avg_pyynti": 146364, "avg_tote": 141636, "avg_ero_pros": -4.02, "avg_korj": 0.09}, {"nimi": "Helin Ranne", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 11, "avg_pyynti": 341727, "avg_tote": 325894, "avg_ero_pros": -5.71, "avg_korj": 0.09}, {"nimi": "Teo Schukov", "toimipiste": "Roof Järvenpää | ROOF LKV Keski-Uusimaa Oy", "kohteet": 11, "avg_pyynti": 181864, "avg_tote": 173227, "avg_ero_pros": -4.17, "avg_korj": 0.18}, {"nimi": "Mari Jokelainen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 10, "avg_pyynti": 323500, "avg_tote": 285100, "avg_ero_pros": -8.36, "avg_korj": 0.4}, {"nimi": "Jaana Huurinainen", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 10, "avg_pyynti": 359400, "avg_tote": 336450, "avg_ero_pros": -7.32, "avg_korj": 0.2}, {"nimi": "Miia Piitulainen", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 9, "avg_pyynti": 260778, "avg_tote": 241000, "avg_ero_pros": -9.34, "avg_korj": 0.33}, {"nimi": "Ari Patama", "toimipiste": "Roof Satakunta | ROOF LKV Satakunta Oy", "kohteet": 9, "avg_pyynti": 133611, "avg_tote": 124722, "avg_ero_pros": -8.29, "avg_korj": 0.67}, {"nimi": "Duarte Tammilehto", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 9, "avg_pyynti": 253444, "avg_tote": 235944, "avg_ero_pros": -7.17, "avg_korj": 0.44}, {"nimi": "Tommi Kujala", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 8, "avg_pyynti": 239125, "avg_tote": 226625, "avg_ero_pros": -6.52, "avg_korj": 0.12}, {"nimi": "Axel Dressell", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 8, "avg_pyynti": 205500, "avg_tote": 189750, "avg_ero_pros": -7.43, "avg_korj": 0.5}, {"nimi": "Martti Jaako", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 8, "avg_pyynti": 319250, "avg_tote": 285375, "avg_ero_pros": -9.75, "avg_korj": 0.75}, {"nimi": "Laura Rantala", "toimipiste": "Roof Satakunta | ROOF LKV Satakunta Oy", "kohteet": 8, "avg_pyynti": 141125, "avg_tote": 127397, "avg_ero_pros": -8.95, "avg_korj": 0.5}, {"nimi": "Minna Kemppainen", "toimipiste": "Roof Oulu | Asuntokolmio Oy", "kohteet": 8, "avg_pyynti": 145100, "avg_tote": 140250, "avg_ero_pros": -5.49, "avg_korj": 0.5}, {"nimi": "Eija Kanniainen-Ikonen", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 8, "avg_pyynti": 418375, "avg_tote": 377688, "avg_ero_pros": -8.6, "avg_korj": 0.5}, {"nimi": "Niko Rauhamaa", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 8, "avg_pyynti": 279750, "avg_tote": 263875, "avg_ero_pros": -6.34, "avg_korj": 0.25}, {"nimi": "Kari Karlsten", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 8, "avg_pyynti": 760125, "avg_tote": 720875, "avg_ero_pros": -5.6, "avg_korj": 0.12}, {"nimi": "Janette Rautakoski", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 7, "avg_pyynti": 270571, "avg_tote": 253373, "avg_ero_pros": -6.95, "avg_korj": 0.29}, {"nimi": "Kaisa Lehtonen", "toimipiste": "Roof Salo | ROOF LKV Varsinais-Suomi Oy", "kohteet": 7, "avg_pyynti": 125143, "avg_tote": 118786, "avg_ero_pros": -6.55, "avg_korj": 0.14}, {"nimi": "Tomi Haltia", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 6, "avg_pyynti": 289750, "avg_tote": 262500, "avg_ero_pros": -9.08, "avg_korj": 0.33}, {"nimi": "Laura Ruuska", "toimipiste": "Roof Kotka | ROOF LKV Kymenlaakso Oy", "kohteet": 6, "avg_pyynti": 101500, "avg_tote": 85267, "avg_ero_pros": -13.14, "avg_korj": 1.17}, {"nimi": "Oili Rosti-Räty", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 6, "avg_pyynti": 219667, "avg_tote": 201000, "avg_ero_pros": -9.04, "avg_korj": 0.33}, {"nimi": "Robert Heinänen", "toimipiste": "Roof Karjaa | ROOF LKV Etelä/Syd Oy Ab", "kohteet": 6, "avg_pyynti": 117000, "avg_tote": 111417, "avg_ero_pros": -5.93, "avg_korj": 0.0}, {"nimi": "Jenni Polizzi", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 6, "avg_pyynti": 276333, "avg_tote": 263833, "avg_ero_pros": -4.94, "avg_korj": 0.0}, {"nimi": "Panu Paanila", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 6, "avg_pyynti": 193500, "avg_tote": 183083, "avg_ero_pros": -5.23, "avg_korj": 0.0}, {"nimi": "Tomi Rinne", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 5, "avg_pyynti": 157800, "avg_tote": 147000, "avg_ero_pros": -7.55, "avg_korj": 0.6}, {"nimi": "Matti Lehtelä", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 5, "avg_pyynti": 380600, "avg_tote": 372850, "avg_ero_pros": -3.63, "avg_korj": 1.0}, {"nimi": "Outi Malmlund", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 5, "avg_pyynti": 303200, "avg_tote": 286800, "avg_ero_pros": -5.63, "avg_korj": 0.4}, {"nimi": "Anne-Maria Hirviniemi", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 5, "avg_pyynti": 321800, "avg_tote": 314400, "avg_ero_pros": -2.86, "avg_korj": 0.0}, {"nimi": "Merveille Bivu", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 5, "avg_pyynti": 234400, "avg_tote": 227200, "avg_ero_pros": -3.57, "avg_korj": 0.0}, {"nimi": "Mervi Nuutinen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 5, "avg_pyynti": 246800, "avg_tote": 239600, "avg_ero_pros": -3.01, "avg_korj": 0.2}, {"nimi": "Lena Flinck", "toimipiste": "Roof Tammisaari | ROOF LKV Etelä/Syd Oy Ab", "kohteet": 4, "avg_pyynti": 150475, "avg_tote": 133688, "avg_ero_pros": -11.16, "avg_korj": 0.25}, {"nimi": "Miro Hovi", "toimipiste": "Roof Kouvola | ROOF LKV Kymenlaakso Oy", "kohteet": 4, "avg_pyynti": 72500, "avg_tote": 65050, "avg_ero_pros": -14.0, "avg_korj": 0.0}, {"nimi": "Senja Nukarinen", "toimipiste": "Roof Hyvinkää | ROOF Group Oy", "kohteet": 4, "avg_pyynti": 138750, "avg_tote": 123500, "avg_ero_pros": -10.47, "avg_korj": 0.25}, {"nimi": "Kirsi Aarikka", "toimipiste": "Roof Salo | ROOF LKV Varsinais-Suomi Oy", "kohteet": 4, "avg_pyynti": 137625, "avg_tote": 129000, "avg_ero_pros": -7.76, "avg_korj": 0.0}, {"nimi": "Asta Leskinen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 4, "avg_pyynti": 298500, "avg_tote": 276125, "avg_ero_pros": -7.9, "avg_korj": 0.25}, {"nimi": "Johan Grönqvist", "toimipiste": "Roof Karjaa | ROOF LKV Etelä/Syd Oy Ab", "kohteet": 4, "avg_pyynti": 124750, "avg_tote": 117375, "avg_ero_pros": -5.48, "avg_korj": 0.0}, {"nimi": "Antti Sumari", "toimipiste": "Roof Salo | ROOF LKV Varsinais-Suomi Oy", "kohteet": 4, "avg_pyynti": 100000, "avg_tote": 97125, "avg_ero_pros": -5.95, "avg_korj": 0.0}, {"nimi": "Jukka Norta", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 4, "avg_pyynti": 300250, "avg_tote": 275250, "avg_ero_pros": -7.04, "avg_korj": 0.25}, {"nimi": "Tuomas Maksimainen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 4, "avg_pyynti": 344250, "avg_tote": 329000, "avg_ero_pros": -4.82, "avg_korj": 0.0}, {"nimi": "Mikko Mäkelä", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 4, "avg_pyynti": 225250, "avg_tote": 213950, "avg_ero_pros": -5.17, "avg_korj": 0.25}, {"nimi": "Mikko Lehtonen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 4, "avg_pyynti": 210900, "avg_tote": 200375, "avg_ero_pros": -5.43, "avg_korj": 0.25}, {"nimi": "Jermu Lampinen", "toimipiste": "Roof Kouvola | ROOF LKV Kymenlaakso Oy", "kohteet": 4, "avg_pyynti": 113250, "avg_tote": 106875, "avg_ero_pros": -5.39, "avg_korj": 0.0}, {"nimi": "Roni Haarakangas", "toimipiste": "Roof Hyvinkää | ROOF LKV Keski-Uusimaa Oy", "kohteet": 4, "avg_pyynti": 157250, "avg_tote": 155250, "avg_ero_pros": -1.48, "avg_korj": 0.0}, {"nimi": "John Navarro", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 129667, "avg_tote": 111333, "avg_ero_pros": -14.0, "avg_korj": 0.33}, {"nimi": "Matti Veijanen", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 3, "avg_pyynti": 136333, "avg_tote": 123667, "avg_ero_pros": -12.75, "avg_korj": 0.67}, {"nimi": "Ildiko Katona-Hiekkanen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 334667, "avg_tote": 315000, "avg_ero_pros": -6.01, "avg_korj": 0.0}, {"nimi": "Heini Mattila", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 137667, "avg_tote": 125778, "avg_ero_pros": -8.72, "avg_korj": 0.33}, {"nimi": "Anastasia Mejias", "toimipiste": "Roof Espoo | ROOF LKV Espoo Oy", "kohteet": 3, "avg_pyynti": 348667, "avg_tote": 325667, "avg_ero_pros": -6.85, "avg_korj": 0.33}, {"nimi": "Irja Seppälä", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 162667, "avg_tote": 154333, "avg_ero_pros": -5.11, "avg_korj": 1.0}, {"nimi": "Kari Turunen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 257967, "avg_tote": 242333, "avg_ero_pros": -6.19, "avg_korj": 0.33}, {"nimi": "Matti Parkkila", "toimipiste": "Roof Tampere | ROOF LKV Tampere Oy", "kohteet": 3, "avg_pyynti": 187000, "avg_tote": 177833, "avg_ero_pros": -4.84, "avg_korj": 0.33}, {"nimi": "Kimmo Antikainen", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 296000, "avg_tote": 280667, "avg_ero_pros": -4.97, "avg_korj": 0.67}, {"nimi": "Stefan Koivikko", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 244333, "avg_tote": 238667, "avg_ero_pros": -2.35, "avg_korj": 0.0}, {"nimi": "Stefano Ramirez", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 227667, "avg_tote": 219667, "avg_ero_pros": -3.63, "avg_korj": 0.0}, {"nimi": "Meiju Patala", "toimipiste": "Roof Järvenpää | ROOF LKV Keski-Uusimaa Oy", "kohteet": 3, "avg_pyynti": 174333, "avg_tote": 167333, "avg_ero_pros": -3.87, "avg_korj": 0.0}, {"nimi": "Janne Parhiala", "toimipiste": "Roof Helsinki | ROOF Group Oy", "kohteet": 3, "avg_pyynti": 203667, "avg_tote": 221463, "avg_ero_pros": 5.86, "avg_korj": 0.67}];
+  let pvSortKey='kohteet', pvSortDir=-1;
+  const pvFmtE = v => Math.round(v).toLocaleString('fi-FI')+' €';
+  const pvFmtP = v => (v>=0?'+':'')+v.toFixed(2).replace('.',',')+' %';
+  const pvFmtN = v => v.toFixed(2).replace('.',',');
+  function pvInit(){
+    const offs=[...new Set(PYYNTI_DATA.map(d=>d.toimipiste))].sort();
+    const sel=document.getElementById('pvFilterOff');
+    offs.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;sel.appendChild(opt);});
+    pvRenderKpis();pvRender();
+  }
+  function pvRenderKpis(){
+    document.getElementById('pvKpiVal').textContent=PYYNTI_DATA.length;
+    const totK=PYYNTI_DATA.reduce((s,d)=>s+d.kohteet,0);
+    document.getElementById('pvKpiKohteet').textContent=totK.toLocaleString('fi-FI');
+    const wEro=PYYNTI_DATA.reduce((s,d)=>s+d.avg_ero_pros*d.kohteet,0)/totK;
+    const wKorj=PYYNTI_DATA.reduce((s,d)=>s+d.avg_korj*d.kohteet,0)/totK;
+    const eroEl=document.getElementById('pvKpiEro');
+    eroEl.textContent=pvFmtP(wEro);
+    eroEl.style.color=wEro<-5?'#dc2626':wEro<-2?'#D97706':'#16a34a';
+    document.getElementById('pvKpiKorj').textContent=pvFmtN(wKorj);
+  }
+  function pvSort(k){
+    if(pvSortKey===k)pvSortDir=-pvSortDir;
+    else{pvSortKey=k;pvSortDir=(k==='nimi'||k==='toimipiste')?1:-1;}
+    pvRender();
+  }
+  function pvRender(){
+    const q=document.getElementById('pvSearch').value.toLowerCase().trim();
+    const off=document.getElementById('pvFilterOff').value;
+    const minK=+document.getElementById('pvMinKoh').value;
+    let data=PYYNTI_DATA.filter(d=>{
+      if(d.kohteet<minK)return false;
+      if(off&&d.toimipiste!==off)return false;
+      if(q&&!d.nimi.toLowerCase().includes(q)&&!d.toimipiste.toLowerCase().includes(q))return false;
+      return true;
+    });
+    data.sort((a,b)=>{const av=a[pvSortKey],bv=b[pvSortKey];if(typeof av==='string')return av.localeCompare(bv,'fi')*pvSortDir;return (av-bv)*pvSortDir;});
+    document.querySelectorAll('#page-pyynti .sn').forEach(e=>e.textContent='');
+    const sn=document.getElementById('pv-s-'+pvSortKey);if(sn)sn.textContent=pvSortDir>0?'↑':'↓';
+    const maxK=Math.max(...data.map(d=>d.avg_korj),0.5);
+    document.getElementById('pvBody').innerHTML=data.map(d=>{
+      const eroCls=d.avg_ero_pros<-5?'pv-ero-neg':d.avg_ero_pros<-1?'pv-ero-zero':'pv-ero-pos';
+      const w=Math.round(d.avg_korj/maxK*100);
+      return `<tr><td><div>${d.nimi}</div><div class="pv-toim">${d.toimipiste}</div></td>
+        <td class="num">${d.kohteet}</td>
+        <td class="num">${pvFmtE(d.avg_pyynti)}</td>
+        <td class="num">${pvFmtE(d.avg_tote)}</td>
+        <td class="num ${eroCls}">${pvFmtP(d.avg_ero_pros)}</td>
+        <td class="num"><span class="pv-bar-bg"><span class="pv-bar-fill" style="width:${w}%"></span></span>${pvFmtN(d.avg_korj)}</td></tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:#A09074">Ei tuloksia</td></tr>';
+  }
+  pvInit();
+  </script>
 </div>
 
 <div class="page" id="page-yhteenvedot">
