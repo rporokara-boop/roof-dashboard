@@ -390,6 +390,31 @@ function checkAuth(){
       <div id="pvContent"></div>
     </div>
 
+    <!-- MIHIN KESKITTYÄ -->
+    <div class="card" id="adviceSection" style="margin-top:18px">
+      <div class="ctitle">🎯 Mihin sinun kannattaa keskittyä</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Personoidut suositukset perustuen omiin lukuihisi vs. konsernin keskiarvo</div>
+      <style>
+        .adv-list{display:flex;flex-direction:column;gap:10px}
+        .adv-item{background:#FAFAF7;border:1px solid #E0D9CF;border-radius:12px;padding:14px 16px;border-left:5px solid #28D1CD}
+        .adv-item.warn{border-left-color:#D97706}
+        .adv-item.crit{border-left-color:#dc2626}
+        .adv-item.ok{border-left-color:#16a34a;opacity:.85}
+        .adv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+        .adv-title{font-size:.92rem;font-weight:800;color:#181818;display:flex;align-items:center;gap:8px}
+        .adv-comp{font-size:.74rem;color:#64748B;font-variant-numeric:tabular-nums;white-space:nowrap}
+        .adv-comp b{color:#181818;font-weight:800}
+        .adv-comp .warn{color:#D97706}
+        .adv-comp .crit{color:#dc2626}
+        .adv-comp .ok{color:#16a34a}
+        .adv-text{font-size:.82rem;color:#181818;line-height:1.5}
+        .adv-summary{background:#003848;color:#F5F1EC;border-radius:12px;padding:14px 18px;margin-bottom:14px;font-size:.86rem;line-height:1.5}
+        .adv-summary b{color:#28D1CD}
+        .adv-no-data{padding:24px;text-align:center;color:#64748B;font-size:.84rem}
+      </style>
+      <div id="adviceContent"></div>
+    </div>
+
   </div>
 </div>
 
@@ -824,6 +849,218 @@ function pvRenderForAgent(agentName){
     const r = orig.apply(this, arguments);
     const sel = document.getElementById('agSel');
     if(sel && sel.value) pvRenderForAgent(sel.value);
+    return r;
+  };
+})();
+</script>
+
+
+<script>
+// ── KONSERNI BENCHMARKS (lähde: gid 791295824 Row 27 Toteuma yhteensä) ──
+const KONSERNI_BM = {
+  tap_kauppa: 21.56,
+  tap_toimari: 49.74,
+  toimari_kauppa: 43.34,
+  naytot_kauppa: 13.3,
+  keskipalkkio: 4678,
+  tap_arvo: 1044,
+};
+
+// ── PER-VÄLITTÄJÄ STATSIT (lähde: gid 1979538260 + count-sheetit) ──
+const STATSIT_PER_VAL = {"Joni Sevoin": {"tap_kauppa": 0, "tap_toimari": 0, "toimari_kauppa": 50.0, "naytot_kauppa": 8.0, "keskipalkkio": 1924.31, "tap_arvo": 0, "tap": 0.0, "toim": 2.0, "kaupat": 1.0, "naytot": 8.0}, "Saara Kokko": {"tap_kauppa": 0, "tap_toimari": 0, "toimari_kauppa": 0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 0, "tap": 0, "toim": 87.0, "kaupat": 89.5, "naytot": 0}, "Amir Ahmad": {"tap_kauppa": 0, "tap_toimari": 0, "toimari_kauppa": 0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 0, "tap": 0, "toim": 65.0, "kaupat": 67.0, "naytot": 0}, "Tuukka Leppänen": {"tap_kauppa": 0, "tap_toimari": 0, "toimari_kauppa": 0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 0, "tap": 0, "toim": 5.0, "kaupat": 5.0, "naytot": 0}, "Stefan von Harpe": {"tap_kauppa": 61.24, "tap_toimari": 100.0, "toimari_kauppa": 61.24, "naytot_kauppa": 4.0, "keskipalkkio": 6224.82, "tap_arvo": 3812.28, "tap": 37.0, "toim": 37.0, "kaupat": 22.66, "naytot": 86.0}, "Karri Rytilahti": {"tap_kauppa": 55.56, "tap_toimari": 103.7, "toimari_kauppa": 53.57, "naytot_kauppa": 8.0, "keskipalkkio": 3792.47, "tap_arvo": 3129.11, "tap": 27.0, "toim": 28.0, "kaupat": 15.0, "naytot": 125.0}, "Janne Parhiala": {"tap_kauppa": 57.5, "tap_toimari": 0.0, "toimari_kauppa": 0, "naytot_kauppa": 4.0, "keskipalkkio": 4891.87, "tap_arvo": 2812.82, "tap": 4.0, "toim": 0.0, "kaupat": 2.3, "naytot": 10.0}, "Joel Vehkalahti": {"tap_kauppa": 52.17, "tap_toimari": 63.04, "toimari_kauppa": 82.76, "naytot_kauppa": 15.0, "keskipalkkio": 5810.36, "tap_arvo": 2694.91, "tap": 23.0, "toim": 14.5, "kaupat": 12.0, "naytot": 178.0}, "Juhani Hirvonen": {"tap_kauppa": 58.33, "tap_toimari": 141.67, "toimari_kauppa": 41.18, "naytot_kauppa": 12.0, "keskipalkkio": 8854.71, "tap_arvo": 2603.5, "tap": 12.0, "toim": 17.0, "kaupat": 7.0, "naytot": 86.0}, "Lauri Kuusela": {"tap_kauppa": 58.9, "tap_toimari": 51.14, "toimari_kauppa": 115.18, "naytot_kauppa": 5.0, "keskipalkkio": 4287.46, "tap_arvo": 2525.22, "tap": 88.0, "toim": 45.0, "kaupat": 51.83, "naytot": 236.0}, "Santeri Carlsson": {"tap_kauppa": 58.18, "tap_toimari": 74.55, "toimari_kauppa": 78.05, "naytot_kauppa": 7.0, "keskipalkkio": 4293.15, "tap_arvo": 2497.83, "tap": 55.0, "toim": 41.0, "kaupat": 32.0, "naytot": 222.0}, "Tytti Löppönen": {"tap_kauppa": 25.0, "tap_toimari": 116.67, "toimari_kauppa": 21.43, "naytot_kauppa": 23.0, "keskipalkkio": 9795.84, "tap_arvo": 2448.96, "tap": 6.0, "toim": 7.0, "kaupat": 1.5, "naytot": 35.0}, "Miko Rikala": {"tap_kauppa": 35.42, "tap_toimari": 52.08, "toimari_kauppa": 68.0, "naytot_kauppa": 7.0, "keskipalkkio": 6657.04, "tap_arvo": 2357.7, "tap": 48.0, "toim": 25.0, "kaupat": 17.0, "naytot": 117.0}, "Jaana Huurinainen": {"tap_kauppa": 45.12, "tap_toimari": 86.05, "toimari_kauppa": 52.43, "naytot_kauppa": 16.0, "keskipalkkio": 4690.96, "tap_arvo": 2116.39, "tap": 21.5, "toim": 18.5, "kaupat": 9.7, "naytot": 154.0}, "Laura Lyttinen": {"tap_kauppa": 50.0, "tap_toimari": 82.81, "toimari_kauppa": 60.38, "naytot_kauppa": 5.0, "keskipalkkio": 3780.18, "tap_arvo": 2048.81, "tap": 32.0, "toim": 26.5, "kaupat": 16.0, "naytot": 78.0}, "Sami Pelkonen": {"tap_kauppa": 22.3, "tap_toimari": 72.22, "toimari_kauppa": 30.87, "naytot_kauppa": 9.0, "keskipalkkio": 9045.35, "tap_arvo": 2016.78, "tap": 54.0, "toim": 39.0, "kaupat": 12.04, "naytot": 107.0}, "Taru Tuukkanen": {"tap_kauppa": 50.0, "tap_toimari": 66.67, "toimari_kauppa": 75.0, "naytot_kauppa": 10.0, "keskipalkkio": 4015.58, "tap_arvo": 2007.79, "tap": 27.0, "toim": 18.0, "kaupat": 13.5, "naytot": 141.0}, "Jenni Polizzi": {"tap_kauppa": 46.67, "tap_toimari": 33.33, "toimari_kauppa": 140.0, "naytot_kauppa": 6.0, "keskipalkkio": 4048.44, "tap_arvo": 1889.27, "tap": 15.0, "toim": 5.0, "kaupat": 7.0, "naytot": 39.0}, "Anne-Maria Hirviniemi": {"tap_kauppa": 33.33, "tap_toimari": 66.67, "toimari_kauppa": 50.0, "naytot_kauppa": 11.0, "keskipalkkio": 5604.17, "tap_arvo": 1868.06, "tap": 9.0, "toim": 6.0, "kaupat": 3.0, "naytot": 32.0}, "Kati Mäkinen": {"tap_kauppa": 0.0, "tap_toimari": 0.0, "toimari_kauppa": 0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 1867.0, "tap": 1.0, "toim": 0.0, "kaupat": 0.0, "naytot": 3.0}, "Mikko Anttikoski": {"tap_kauppa": 39.58, "tap_toimari": 68.75, "toimari_kauppa": 57.58, "naytot_kauppa": 8.0, "keskipalkkio": 4519.95, "tap_arvo": 1789.15, "tap": 48.0, "toim": 33.0, "kaupat": 19.0, "naytot": 159.0}, "Lauri Lotvonen": {"tap_kauppa": 34.69, "tap_toimari": 69.39, "toimari_kauppa": 50.0, "naytot_kauppa": 10.0, "keskipalkkio": 3134.2, "tap_arvo": 1720.59, "tap": 49.0, "toim": 34.0, "kaupat": 17.0, "naytot": 164.0}, "Niko Rauhamaa": {"tap_kauppa": 30.0, "tap_toimari": 38.1, "toimari_kauppa": 78.75, "naytot_kauppa": 15.0, "keskipalkkio": 5630.31, "tap_arvo": 1689.09, "tap": 21.0, "toim": 8.0, "kaupat": 6.3, "naytot": 95.0}, "Mari Jokelainen": {"tap_kauppa": 39.47, "tap_toimari": 44.74, "toimari_kauppa": 88.24, "naytot_kauppa": 5.0, "keskipalkkio": 4030.07, "tap_arvo": 1590.82, "tap": 38.0, "toim": 17.0, "kaupat": 15.0, "naytot": 82.0}, "Arja Alakopsa": {"tap_kauppa": 39.13, "tap_toimari": 65.22, "toimari_kauppa": 60.0, "naytot_kauppa": 13.0, "keskipalkkio": 24691.02, "tap_arvo": 1585.0, "tap": 23.0, "toim": 15.0, "kaupat": 9.0, "naytot": 116.0}, "Sari Uusitalo": {"tap_kauppa": 55.69, "tap_toimari": 84.31, "toimari_kauppa": 66.05, "naytot_kauppa": 4.0, "keskipalkkio": 2843.83, "tap_arvo": 1583.62, "tap": 51.0, "toim": 43.0, "kaupat": 28.4, "naytot": 119.0}, "Mira Järvinen": {"tap_kauppa": 35.2, "tap_toimari": 63.0, "toimari_kauppa": 55.87, "naytot_kauppa": 9.0, "keskipalkkio": 4431.49, "tap_arvo": 1559.89, "tap": 50.0, "toim": 31.5, "kaupat": 17.6, "naytot": 154.0}, "Eddi Holmberg": {"tap_kauppa": 38.71, "tap_toimari": 74.19, "toimari_kauppa": 52.17, "naytot_kauppa": 4.0, "keskipalkkio": 3767.92, "tap_arvo": 1458.55, "tap": 31.0, "toim": 23.0, "kaupat": 12.0, "naytot": 50.0}, "Tomi Huusari": {"tap_kauppa": 41.62, "tap_toimari": 75.68, "toimari_kauppa": 55.0, "naytot_kauppa": 6.0, "keskipalkkio": 3498.55, "tap_arvo": 1456.15, "tap": 37.0, "toim": 28.0, "kaupat": 15.4, "naytot": 91.0}, "Eija Kanninen-Ikonen": {"tap_kauppa": 31.11, "tap_toimari": 44.44, "toimari_kauppa": 70.0, "naytot_kauppa": 11.0, "keskipalkkio": 4666.83, "tap_arvo": 1451.9, "tap": 27.0, "toim": 12.0, "kaupat": 8.4, "naytot": 95.0}, "Sakari Ikonen": {"tap_kauppa": 30.77, "tap_toimari": 76.92, "toimari_kauppa": 40.0, "naytot_kauppa": 20.0, "keskipalkkio": 4523.59, "tap_arvo": 1391.87, "tap": 13.0, "toim": 10.0, "kaupat": 4.0, "naytot": 81.0}, "Petri Kajaan": {"tap_kauppa": 30.18, "tap_toimari": 67.27, "toimari_kauppa": 44.86, "naytot_kauppa": 10.0, "keskipalkkio": 4588.92, "tap_arvo": 1385.02, "tap": 55.0, "toim": 37.0, "kaupat": 16.6, "naytot": 166.0}, "Anastasia Meija": {"tap_kauppa": 25.0, "tap_toimari": 135.0, "toimari_kauppa": 18.52, "naytot_kauppa": 10.0, "keskipalkkio": 5478.68, "tap_arvo": 1369.67, "tap": 20.0, "toim": 27.0, "kaupat": 5.0, "naytot": 49.0}, "Can Zhang": {"tap_kauppa": 26.41, "tap_toimari": 74.36, "toimari_kauppa": 35.52, "naytot_kauppa": 12.0, "keskipalkkio": 5072.78, "tap_arvo": 1339.73, "tap": 78.0, "toim": 58.0, "kaupat": 20.6, "naytot": 250.0}, "Sari Rossi": {"tap_kauppa": 24.53, "tap_toimari": 50.94, "toimari_kauppa": 48.15, "naytot_kauppa": 11.0, "keskipalkkio": 5294.76, "tap_arvo": 1298.71, "tap": 53.0, "toim": 27.0, "kaupat": 13.0, "naytot": 137.0}, "Tiimi": {"tap_kauppa": 26.09, "tap_toimari": 71.74, "toimari_kauppa": 36.36, "naytot_kauppa": 10.0, "keskipalkkio": 5061.52, "tap_arvo": 1320.4, "tap": 92.0, "toim": 66.0, "kaupat": 24.0, "naytot": 235.0}, "Marie Ahola": {"tap_kauppa": 34.48, "tap_toimari": 67.24, "toimari_kauppa": 51.28, "naytot_kauppa": 8.0, "keskipalkkio": 6000.0, "tap_arvo": 1310.3, "tap": 58.0, "toim": 39.0, "kaupat": 20.0, "naytot": 151.0}, "Maarit Nissilä": {"tap_kauppa": 27.27, "tap_toimari": 61.36, "toimari_kauppa": 44.44, "naytot_kauppa": 10.0, "keskipalkkio": 3034.06, "tap_arvo": 1292.89, "tap": 44.0, "toim": 27.0, "kaupat": 12.0, "naytot": 125.0}, "Juhani Ketonen": {"tap_kauppa": 30.29, "tap_toimari": 37.14, "toimari_kauppa": 81.54, "naytot_kauppa": 12.0, "keskipalkkio": 4118.18, "tap_arvo": 1247.22, "tap": 35.0, "toim": 13.0, "kaupat": 10.6, "naytot": 126.0}, "Outi Malmlund": {"tap_kauppa": 20.77, "tap_toimari": 50.0, "toimari_kauppa": 41.54, "naytot_kauppa": 12.0, "keskipalkkio": 5995.28, "tap_arvo": 1245.17, "tap": 26.0, "toim": 13.0, "kaupat": 5.4, "naytot": 64.0}, "Katja Wilhola": {"tap_kauppa": 20.45, "tap_toimari": 29.55, "toimari_kauppa": 69.23, "naytot_kauppa": 13.0, "keskipalkkio": 5747.23, "tap_arvo": 1175.57, "tap": 44.0, "toim": 13.0, "kaupat": 9.0, "naytot": 120.0}, "Anna-Lotte Riuhu": {"tap_kauppa": 42.86, "tap_toimari": 42.86, "toimari_kauppa": 100.0, "naytot_kauppa": 2.0, "keskipalkkio": 2860.56, "tap_arvo": 1225.95, "tap": 7.0, "toim": 3.0, "kaupat": 3.0, "naytot": 7.0}, "Kari Karlsten": {"tap_kauppa": 17.11, "tap_toimari": 55.56, "toimari_kauppa": 30.8, "naytot_kauppa": 13.0, "keskipalkkio": 7152.75, "tap_arvo": 1223.92, "tap": 45.0, "toim": 25.0, "kaupat": 7.7, "naytot": 102.0}, "Janne Halunen": {"tap_kauppa": 31.48, "tap_toimari": 48.15, "toimari_kauppa": 65.38, "naytot_kauppa": 7.0, "keskipalkkio": 9939.53, "tap_arvo": 1183.22, "tap": 27.0, "toim": 13.0, "kaupat": 8.5, "naytot": 56.0}, "Taneli Ollila": {"tap_kauppa": 25.0, "tap_toimari": 62.5, "toimari_kauppa": 40.0, "naytot_kauppa": 17.0, "keskipalkkio": 2136.62, "tap_arvo": 1166.35, "tap": 52.0, "toim": 32.5, "kaupat": 13.0, "naytot": 218.0}, "Terhi Marjakangas": {"tap_kauppa": 39.13, "tap_toimari": 26.09, "toimari_kauppa": 150.0, "naytot_kauppa": 11.0, "keskipalkkio": 297.83, "tap_arvo": 1099.52, "tap": 23.0, "toim": 6.0, "kaupat": 9.0, "naytot": 100.0}, "Heidi Niemi": {"tap_kauppa": 35.33, "tap_toimari": 44.44, "toimari_kauppa": 79.5, "naytot_kauppa": 8.0, "keskipalkkio": 3060.49, "tap_arvo": 1081.37, "tap": 45.0, "toim": 20.0, "kaupat": 15.9, "naytot": 127.0}, "Lena Flinck": {"tap_kauppa": 17.65, "tap_toimari": 76.47, "toimari_kauppa": 23.08, "naytot_kauppa": 11.0, "keskipalkkio": 6046.48, "tap_arvo": 1067.03, "tap": 17.0, "toim": 13.0, "kaupat": 3.0, "naytot": 34.0}, "Matti Lehtelä": {"tap_kauppa": 14.29, "tap_toimari": 46.43, "toimari_kauppa": 30.77, "naytot_kauppa": 27.0, "keskipalkkio": 7431.82, "tap_arvo": 1061.69, "tap": 28.0, "toim": 13.0, "kaupat": 4.0, "naytot": 109.0}, "Alex Salo": {"tap_kauppa": 21.43, "tap_toimari": 105.71, "toimari_kauppa": 20.27, "naytot_kauppa": 12.0, "keskipalkkio": 4919.79, "tap_arvo": 1054.24, "tap": 35.0, "toim": 37.0, "kaupat": 7.5, "naytot": 88.0}, "Valtteri Parikka": {"tap_kauppa": 25.43, "tap_toimari": 76.09, "toimari_kauppa": 33.43, "naytot_kauppa": 12.0, "keskipalkkio": 4076.11, "tap_arvo": 1036.75, "tap": 46.0, "toim": 35.0, "kaupat": 11.7, "naytot": 142.0}, "Helin Ranne": {"tap_kauppa": 19.49, "tap_toimari": 37.29, "toimari_kauppa": 52.27, "naytot_kauppa": 15.0, "keskipalkkio": 5259.38, "tap_arvo": 1025.13, "tap": 59.0, "toim": 22.0, "kaupat": 11.5, "naytot": 169.0}, "Teo Schukov": {"tap_kauppa": 36.11, "tap_toimari": 41.67, "toimari_kauppa": 86.67, "naytot_kauppa": 8.0, "keskipalkkio": 2640.06, "tap_arvo": 953.36, "tap": 36.0, "toim": 15.0, "kaupat": 13.0, "naytot": 105.0}, "Marju Jänkälä": {"tap_kauppa": 28.11, "tap_toimari": 45.95, "toimari_kauppa": 61.18, "naytot_kauppa": 7.0, "keskipalkkio": 3445.61, "tap_arvo": 968.5, "tap": 37.0, "toim": 17.0, "kaupat": 10.4, "naytot": 77.0}, "Tomi Rinne": {"tap_kauppa": 30.3, "tap_toimari": 48.48, "toimari_kauppa": 62.5, "naytot_kauppa": 15.0, "keskipalkkio": 3163.35, "tap_arvo": 958.59, "tap": 16.5, "toim": 8.0, "kaupat": 5.0, "naytot": 75.0}, "Martti Jaakko": {"tap_kauppa": 17.07, "tap_toimari": 24.39, "toimari_kauppa": 70.0, "naytot_kauppa": 15.0, "keskipalkkio": 6767.66, "tap_arvo": 1155.45, "tap": 41.0, "toim": 10.0, "kaupat": 7.0, "naytot": 107.0}, "Miikka Heikkala": {"tap_kauppa": 20.27, "tap_toimari": 48.65, "toimari_kauppa": 41.67, "naytot_kauppa": 11.0, "keskipalkkio": 4165.6, "tap_arvo": 879.57, "tap": 37.0, "toim": 18.0, "kaupat": 7.5, "naytot": 79.0}, "Jaakko Simola": {"tap_kauppa": 21.31, "tap_toimari": 70.49, "toimari_kauppa": 30.23, "naytot_kauppa": 6.0, "keskipalkkio": 4110.04, "tap_arvo": 875.91, "tap": 61.0, "toim": 43.0, "kaupat": 13.0, "naytot": 80.0}, "Kari Turunen": {"tap_kauppa": 15.79, "tap_toimari": 47.37, "toimari_kauppa": 33.33, "naytot_kauppa": 24.0, "keskipalkkio": 5372.38, "tap_arvo": 848.27, "tap": 19.0, "toim": 9.0, "kaupat": 3.0, "naytot": 72.0}, "Ildiko Katona-Hiekkanen": {"tap_kauppa": 14.06, "tap_toimari": 17.19, "toimari_kauppa": 81.82, "naytot_kauppa": 14.0, "keskipalkkio": 5920.16, "tap_arvo": 832.52, "tap": 64.0, "toim": 11.0, "kaupat": 9.0, "naytot": 127.0}, "Asta Leskinen": {"tap_kauppa": 17.86, "tap_toimari": 28.57, "toimari_kauppa": 62.5, "naytot_kauppa": 23.0, "keskipalkkio": 5507.41, "tap_arvo": 983.47, "tap": 28.0, "toim": 8.0, "kaupat": 5.0, "naytot": 116.0}, "Harto Pasonen": {"tap_kauppa": 22.5, "tap_toimari": 23.33, "toimari_kauppa": 96.43, "naytot_kauppa": 12.0, "keskipalkkio": 3603.89, "tap_arvo": 810.88, "tap": 60.0, "toim": 14.0, "kaupat": 13.5, "naytot": 158.0}, "Marie Karukoski": {"tap_kauppa": 24.03, "tap_toimari": 38.81, "toimari_kauppa": 61.92, "naytot_kauppa": 8.0, "keskipalkkio": 3374.33, "tap_arvo": 810.85, "tap": 67.0, "toim": 26.0, "kaupat": 16.1, "naytot": 130.0}, "Mikko Mäkelä": {"tap_kauppa": 21.02, "tap_toimari": 90.91, "toimari_kauppa": 23.13, "naytot_kauppa": 14.0, "keskipalkkio": 3816.38, "tap_arvo": 802.31, "tap": 44.0, "toim": 40.0, "kaupat": 9.25, "naytot": 125.0}, "Jani Punnala": {"tap_kauppa": 13.08, "tap_toimari": 69.23, "toimari_kauppa": 18.89, "naytot_kauppa": 24.0, "keskipalkkio": 6022.23, "tap_arvo": 787.52, "tap": 13.0, "toim": 9.0, "kaupat": 1.7, "naytot": 41.0}, "Ulla Rosendahl": {"tap_kauppa": 12.5, "tap_toimari": 37.5, "toimari_kauppa": 33.33, "naytot_kauppa": 5.0, "keskipalkkio": 6215.14, "tap_arvo": 776.89, "tap": 8.0, "toim": 3.0, "kaupat": 1.0, "naytot": 5.0}, "Rebecca Bethell": {"tap_kauppa": 20.0, "tap_toimari": 90.0, "toimari_kauppa": 22.22, "naytot_kauppa": 17.0, "keskipalkkio": 3697.85, "tap_arvo": 739.57, "tap": 10.0, "toim": 9.0, "kaupat": 2.0, "naytot": 33.0}, "Antti Pohjanmeri": {"tap_kauppa": 11.76, "tap_toimari": 0.0, "toimari_kauppa": 0, "naytot_kauppa": 37.0, "keskipalkkio": 6274.91, "tap_arvo": 738.22, "tap": 17.0, "toim": 0.0, "kaupat": 2.0, "naytot": 73.0}, "Senja Nukarinen": {"tap_kauppa": 19.05, "tap_toimari": 47.62, "toimari_kauppa": 40.0, "naytot_kauppa": 14.0, "keskipalkkio": 3794.82, "tap_arvo": 722.82, "tap": 21.0, "toim": 10.0, "kaupat": 4.0, "naytot": 56.0}, "Sari Välimaa": {"tap_kauppa": 23.08, "tap_toimari": 57.69, "toimari_kauppa": 40.0, "naytot_kauppa": 17.0, "keskipalkkio": 3034.06, "tap_arvo": 700.17, "tap": 52.0, "toim": 30.0, "kaupat": 12.0, "naytot": 201.0}, "Axel Dressell": {"tap_kauppa": 19.12, "tap_toimari": 32.35, "toimari_kauppa": 59.09, "naytot_kauppa": 22.0, "keskipalkkio": 3654.98, "tap_arvo": 698.75, "tap": 34.0, "toim": 11.0, "kaupat": 6.5, "naytot": 142.0}, "Jukka-Pekka Halunen": {"tap_kauppa": 17.65, "tap_toimari": 65.44, "toimari_kauppa": 26.97, "naytot_kauppa": 20.0, "keskipalkkio": 4949.06, "tap_arvo": 676.71, "tap": 68.0, "toim": 44.5, "kaupat": 12.0, "naytot": 245.0}, "Stefano Ramirez": {"tap_kauppa": 5.56, "tap_toimari": 27.78, "toimari_kauppa": 20.0, "naytot_kauppa": 13.0, "keskipalkkio": 11936.09, "tap_arvo": 663.12, "tap": 36.0, "toim": 10.0, "kaupat": 2.0, "naytot": 26.0}, "Jermu Lampinen": {"tap_kauppa": 18.33, "tap_toimari": 58.33, "toimari_kauppa": 31.43, "naytot_kauppa": 15.0, "keskipalkkio": 3512.79, "tap_arvo": 644.01, "tap": 24.0, "toim": 14.0, "kaupat": 4.4, "naytot": 67.0}, "Oili Rosti-Räty": {"tap_kauppa": 13.1, "tap_toimari": 54.76, "toimari_kauppa": 23.91, "naytot_kauppa": 21.0, "keskipalkkio": 4778.2, "tap_arvo": 625.72, "tap": 42.0, "toim": 23.0, "kaupat": 5.5, "naytot": 115.0}, "Miia Piitulainen": {"tap_kauppa": 14.57, "tap_toimari": 63.04, "toimari_kauppa": 23.1, "naytot_kauppa": 19.0, "keskipalkkio": 4194.88, "tap_arvo": 610.99, "tap": 46.0, "toim": 29.0, "kaupat": 6.7, "naytot": 129.0}, "Jukka Norta": {"tap_kauppa": 5.41, "tap_toimari": 43.24, "toimari_kauppa": 12.5, "naytot_kauppa": 37.0, "keskipalkkio": 11274.56, "tap_arvo": 609.44, "tap": 37.0, "toim": 16.0, "kaupat": 2.0, "naytot": 73.0}, "Kirsi Aarikka": {"tap_kauppa": 13.33, "tap_toimari": 86.67, "toimari_kauppa": 15.38, "naytot_kauppa": 7.0, "keskipalkkio": 4294.83, "tap_arvo": 572.64, "tap": 15.0, "toim": 13.0, "kaupat": 2.0, "naytot": 13.0}, "Mikko Lehtonen": {"tap_kauppa": 17.78, "tap_toimari": 53.33, "toimari_kauppa": 33.33, "naytot_kauppa": 16.0, "keskipalkkio": 3191.14, "tap_arvo": 567.31, "tap": 45.0, "toim": 24.0, "kaupat": 8.0, "naytot": 127.0}, "Kimmo Antikainen": {"tap_kauppa": 10.29, "tap_toimari": 28.57, "toimari_kauppa": 36.0, "naytot_kauppa": 6.0, "keskipalkkio": 5478.98, "tap_arvo": 563.55, "tap": 35.0, "toim": 10.0, "kaupat": 3.6, "naytot": 23.0}, "Laura Ruuska": {"tap_kauppa": 16.43, "tap_toimari": 21.43, "toimari_kauppa": 76.67, "naytot_kauppa": 33.0, "keskipalkkio": 3358.74, "tap_arvo": 551.79, "tap": 14.0, "toim": 3.0, "kaupat": 2.3, "naytot": 76.0}, "Pauliina Alatarvas": {"tap_kauppa": 15.0, "tap_toimari": 31.25, "toimari_kauppa": 48.0, "naytot_kauppa": 22.0, "keskipalkkio": 3608.33, "tap_arvo": 541.25, "tap": 40.0, "toim": 12.5, "kaupat": 6.0, "naytot": 131.0}, "Kirsi Apajalahti-Plym": {"tap_kauppa": 13.64, "tap_toimari": 54.55, "toimari_kauppa": 25.0, "naytot_kauppa": 11.0, "keskipalkkio": 3768.52, "tap_arvo": 513.89, "tap": 22.0, "toim": 12.0, "kaupat": 3.0, "naytot": 34.0}, "Miro Hovi": {"tap_kauppa": 16.0, "tap_toimari": 45.0, "toimari_kauppa": 35.56, "naytot_kauppa": 17.0, "keskipalkkio": 3178.41, "tap_arvo": 508.55, "tap": 20.0, "toim": 9.0, "kaupat": 3.2, "naytot": 55.0}, "Panu Paanila": {"tap_kauppa": 13.33, "tap_toimari": 37.78, "toimari_kauppa": 35.29, "naytot_kauppa": 13.0, "keskipalkkio": 3764.93, "tap_arvo": 501.99, "tap": 45.0, "toim": 17.0, "kaupat": 6.0, "naytot": 77.0}, "Kaisa Lehtonen": {"tap_kauppa": 15.52, "tap_toimari": 65.52, "toimari_kauppa": 23.68, "naytot_kauppa": 13.0, "keskipalkkio": 3181.29, "tap_arvo": 493.65, "tap": 29.0, "toim": 19.0, "kaupat": 4.5, "naytot": 60.0}, "Merveil Bivu": {"tap_kauppa": 10.53, "tap_toimari": 48.68, "toimari_kauppa": 21.62, "naytot_kauppa": 17.0, "keskipalkkio": 3965.09, "tap_arvo": 417.38, "tap": 76.0, "toim": 37.0, "kaupat": 8.0, "naytot": 134.0}, "Laura Rantala": {"tap_kauppa": 15.85, "tap_toimari": 36.59, "toimari_kauppa": 43.33, "naytot_kauppa": 22.0, "keskipalkkio": 4273.23, "tap_arvo": 677.46, "tap": 41.0, "toim": 15.0, "kaupat": 6.5, "naytot": 145.0}, "Tuomas Maksimainen": {"tap_kauppa": 10.77, "tap_toimari": 18.46, "toimari_kauppa": 58.33, "naytot_kauppa": 19.0, "keskipalkkio": 5523.73, "tap_arvo": 594.86, "tap": 65.0, "toim": 12.0, "kaupat": 7.0, "naytot": 135.0}, "Irja Seppälä": {"tap_kauppa": 11.43, "tap_toimari": 40.0, "toimari_kauppa": 28.57, "naytot_kauppa": 16.0, "keskipalkkio": 4063.75, "tap_arvo": 464.43, "tap": 35.0, "toim": 14.0, "kaupat": 4.0, "naytot": 62.0}, "Duarte Tammilehto": {"tap_kauppa": 14.81, "tap_toimari": 51.92, "toimari_kauppa": 28.52, "naytot_kauppa": 16.0, "keskipalkkio": 2988.48, "tap_arvo": 442.53, "tap": 52.0, "toim": 27.0, "kaupat": 7.7, "naytot": 123.0}, "Tomi Haltia": {"tap_kauppa": 13.65, "tap_toimari": 30.77, "toimari_kauppa": 44.38, "naytot_kauppa": 9.0, "keskipalkkio": 3140.73, "tap_arvo": 428.83, "tap": 52.0, "toim": 16.0, "kaupat": 7.1, "naytot": 61.0}, "Janette Rautakoski": {"tap_kauppa": 10.74, "tap_toimari": 42.95, "toimari_kauppa": 25.0, "naytot_kauppa": 19.0, "keskipalkkio": 3970.22, "tap_arvo": 426.33, "tap": 74.5, "toim": 32.0, "kaupat": 8.0, "naytot": 149.0}, "Antti Sumari": {"tap_kauppa": 10.34, "tap_toimari": 55.17, "toimari_kauppa": 18.75, "naytot_kauppa": 17.0, "keskipalkkio": 3954.05, "tap_arvo": 409.04, "tap": 29.0, "toim": 16.0, "kaupat": 3.0, "naytot": 50.0}, "Ari Patama": {"tap_kauppa": 14.58, "tap_toimari": 52.08, "toimari_kauppa": 28.0, "naytot_kauppa": 0, "keskipalkkio": 2729.42, "tap_arvo": 398.04, "tap": 48.0, "toim": 25.0, "kaupat": 7.0, "naytot": 121.0}, "Matti Parkkila": {"tap_kauppa": 7.22, "tap_toimari": 33.33, "toimari_kauppa": 21.67, "naytot_kauppa": 57.0, "keskipalkkio": 5112.48, "tap_arvo": 369.23, "tap": 36.0, "toim": 12.0, "kaupat": 2.6, "naytot": 147.0}, "Ann-Marie Nordström": {"tap_kauppa": 4.69, "tap_toimari": 25.0, "toimari_kauppa": 18.75, "naytot_kauppa": 27.0, "keskipalkkio": 8297.47, "tap_arvo": 388.94, "tap": 32.0, "toim": 8.0, "kaupat": 1.5, "naytot": 40.0}, "Tommi Kujala": {"tap_kauppa": 13.33, "tap_toimari": 47.5, "toimari_kauppa": 28.07, "naytot_kauppa": 22.0, "keskipalkkio": 4008.8, "tap_arvo": 534.51, "tap": 60.0, "toim": 28.5, "kaupat": 8.0, "naytot": 175.0}, "Anu Markkula": {"tap_kauppa": 4.0, "tap_toimari": 64.0, "toimari_kauppa": 6.25, "naytot_kauppa": 36.0, "keskipalkkio": 8788.85, "tap_arvo": 351.55, "tap": 25.0, "toim": 16.0, "kaupat": 1.0, "naytot": 36.0}, "John Navarro": {"tap_kauppa": 9.09, "tap_toimari": 36.36, "toimari_kauppa": 25.0, "naytot_kauppa": 4.0, "keskipalkkio": 3525.9, "tap_arvo": 320.54, "tap": 44.0, "toim": 16.0, "kaupat": 4.0, "naytot": 17.0}, "Mia Immonen": {"tap_kauppa": 4.0, "tap_toimari": 16.0, "toimari_kauppa": 25.0, "naytot_kauppa": 16.0, "keskipalkkio": 7726.85, "tap_arvo": 309.07, "tap": 25.0, "toim": 4.0, "kaupat": 1.0, "naytot": 16.0}, "Matti Veijanen": {"tap_kauppa": 10.71, "tap_toimari": 46.43, "toimari_kauppa": 23.08, "naytot_kauppa": 7.0, "keskipalkkio": 2642.76, "tap_arvo": 283.15, "tap": 28.0, "toim": 13.0, "kaupat": 3.0, "naytot": 22.0}, "Meiju Patala": {"tap_kauppa": 6.25, "tap_toimari": 37.5, "toimari_kauppa": 16.67, "naytot_kauppa": 7.0, "keskipalkkio": 4422.31, "tap_arvo": 276.39, "tap": 16.0, "toim": 6.0, "kaupat": 1.0, "naytot": 7.0}, "Heikki Väliaho": {"tap_kauppa": 14.29, "tap_toimari": 0.0, "toimari_kauppa": 0, "naytot_kauppa": 75.0, "keskipalkkio": 19105.97, "tap_arvo": 272.57, "tap": 7.0, "toim": 0.0, "kaupat": 1.0, "naytot": 75.0}, "Roni Haarakangas": {"tap_kauppa": 12.68, "tap_toimari": 56.1, "toimari_kauppa": 22.61, "naytot_kauppa": 13.0, "keskipalkkio": 2063.28, "tap_arvo": 261.68, "tap": 41.0, "toim": 23.0, "kaupat": 5.2, "naytot": 68.0}, "Heini Mattila": {"tap_kauppa": 8.33, "tap_toimari": 29.17, "toimari_kauppa": 28.57, "naytot_kauppa": 20.0, "keskipalkkio": 3071.51, "tap_arvo": 255.96, "tap": 24.0, "toim": 7.0, "kaupat": 2.0, "naytot": 39.0}, "Juha Lehtonen": {"tap_kauppa": 7.65, "tap_toimari": 34.12, "toimari_kauppa": 22.41, "naytot_kauppa": 12.0, "keskipalkkio": 3331.05, "tap_arvo": 254.73, "tap": 85.0, "toim": 29.0, "kaupat": 6.5, "naytot": 77.0}, "Mervi Nuutinen": {"tap_kauppa": 4.53, "tap_toimari": 32.08, "toimari_kauppa": 14.12, "naytot_kauppa": 47.0, "keskipalkkio": 5379.48, "tap_arvo": 243.6, "tap": 53.0, "toim": 17.0, "kaupat": 2.4, "naytot": 112.0}, "Alina Ahonen": {"tap_kauppa": 12.5, "tap_toimari": 41.67, "toimari_kauppa": 30.0, "naytot_kauppa": 21.0, "keskipalkkio": 1904.91, "tap_arvo": 238.11, "tap": 12.0, "toim": 5.0, "kaupat": 1.5, "naytot": 32.0}, "Stefan Koivikko": {"tap_kauppa": 4.46, "tap_toimari": 19.64, "toimari_kauppa": 22.73, "naytot_kauppa": 17.0, "keskipalkkio": 3947.09, "tap_arvo": 176.21, "tap": 28.0, "toim": 5.5, "kaupat": 1.25, "naytot": 21.0}, "Sarah von Harpe": {"tap_kauppa": 4.55, "tap_toimari": 77.27, "toimari_kauppa": 5.88, "naytot_kauppa": 12.0, "keskipalkkio": 3187.25, "tap_arvo": 144.88, "tap": 22.0, "toim": 17.0, "kaupat": 1.0, "naytot": 12.0}, "Markus Tallinen": {"tap_kauppa": 3.2, "tap_toimari": 20.0, "toimari_kauppa": 16.0, "naytot_kauppa": 158.0, "keskipalkkio": 3350.6, "tap_arvo": 107.22, "tap": 25.0, "toim": 5.0, "kaupat": 0.8, "naytot": 126.0}, "Jani Tuominen": {"tap_kauppa": 4.29, "tap_toimari": 31.43, "toimari_kauppa": 13.64, "naytot_kauppa": 27.0, "keskipalkkio": 2161.74, "tap_arvo": 92.65, "tap": 70.0, "toim": 22.0, "kaupat": 3.0, "naytot": 82.0}, "Robert Eriksson": {"tap_kauppa": 1.43, "tap_toimari": 14.29, "toimari_kauppa": 10.0, "naytot_kauppa": 98.0, "keskipalkkio": 3187.25, "tap_arvo": 45.53, "tap": 28.0, "toim": 4.0, "kaupat": 0.4, "naytot": 39.0}, "Tiia Stormbom": {"tap_kauppa": 6.94, "tap_toimari": 41.67, "toimari_kauppa": 16.67, "naytot_kauppa": 26.0, "keskipalkkio": 3187.25, "tap_arvo": 221.34, "tap": 36.0, "toim": 15.0, "kaupat": 2.5, "naytot": 66.0}, "Miikka Susi": {"tap_kauppa": 0.0, "tap_toimari": 40.48, "toimari_kauppa": 0.0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 0.0, "tap": 21.0, "toim": 8.5, "kaupat": 0.0, "naytot": 9.0}, "Margareeta Haapajoki": {"tap_kauppa": 0.0, "tap_toimari": 37.5, "toimari_kauppa": 0.0, "naytot_kauppa": 0, "keskipalkkio": 0, "tap_arvo": 0.0, "tap": 12.0, "toim": 4.5, "kaupat": 0.0, "naytot": 19.0}};
+
+function advFmtP(v){ return v.toFixed(1).replace('.',',')+' %'; }
+function advFmtE(v){ return Math.round(v).toLocaleString('fi-FI')+' €'; }
+function advFmtN(v,d=1){ return v.toFixed(d).replace('.',','); }
+
+function advBadge(klass){ return klass==='crit'?'🔴':klass==='warn'?'🟡':klass==='ok'?'🟢':'⚪'; }
+
+function buildAdviceItems(s, pyynti){
+  const items = [];
+  const km = KONSERNI_BM;
+  const monthsElapsed = 5; // Q1 + Huhtikuu + Toukokuu osittain — voidaan tarkentaa
+  const tapPerMo = s.tap / monthsElapsed;
+
+  // 1. TAPAAMISIA — onko aktiivisesti hankkimassa?
+  // Konsernin keskim. per välittäjä on n. 6 tap/kk (3716 tap / 119 valittajaa / 5 kk)
+  const konserniTapPerMo = 6.2;
+  if(tapPerMo < konserniTapPerMo*0.6){
+    items.push({
+      cls:'crit', icon:'📅', title:'Hanki lisää tapaamisia',
+      comp:`Sinulla <b class="crit">${advFmtN(tapPerMo)} tap/kk</b> · konserni ${advFmtN(konserniTapPerMo)} tap/kk`,
+      text:`Aktiivinen kontaktointi on myynnin pohja. Pidä tavoitteena vähintään ${Math.ceil(konserniTapPerMo*0.8)} tapaamista kuukaudessa — soittele vanhoja kontakteja, hyödynnä ostotoimeksiantoja ja kysy suosituksia jokaisella käynnillä.`
+    });
+  } else if(tapPerMo < konserniTapPerMo*0.85){
+    items.push({
+      cls:'warn', icon:'📅', title:'Tapaamiset alle konsernin',
+      comp:`Sinulla <b class="warn">${advFmtN(tapPerMo)} tap/kk</b> · konserni ${advFmtN(konserniTapPerMo)} tap/kk`,
+      text:`Olet hieman konsernin keskiarvon alapuolella. Lisää aktiivisuutta uusasiakashankintaan saadaksesi lisää myyntimahdollisuuksia.`
+    });
+  } else {
+    items.push({
+      cls:'ok', icon:'📅', title:'Tapaamisten määrä kunnossa',
+      comp:`<b class="ok">${advFmtN(tapPerMo)} tap/kk</b> · konserni ${advFmtN(konserniTapPerMo)} tap/kk`,
+      text:`Hyvää työtä — tapaamisia on hyvä määrä. Jatka samalla aktiivisuudella.`
+    });
+  }
+
+  // 2. TAP → TOIMARI %
+  const tt = s.tap_toimari;
+  if(tt < km.tap_toimari*0.7){
+    items.push({
+      cls:'crit', icon:'🤝', title:'Tee tapaamisilla parempi vaikutus',
+      comp:`Sinulla <b class="crit">${advFmtP(tt)}</b> · konserni ${advFmtP(km.tap_toimari)}`,
+      text:`Vain ${advFmtP(tt)} tapaamisistasi johtaa toimeksiantoon. Valmistaudu paremmin: ennen tapaamista tutki kohde, asiakas ja kilpailijat. Tapaamisella esitä selkeä arvolupaus, näytä Roofin konsepti ja pyydä toimeksianto saman käynnin aikana.`
+    });
+  } else if(tt < km.tap_toimari*0.95){
+    items.push({
+      cls:'warn', icon:'🤝', title:'Tapaamiskonversio voi parantua',
+      comp:`Sinulla <b class="warn">${advFmtP(tt)}</b> · konserni ${advFmtP(km.tap_toimari)}`,
+      text:`Olet lähellä konsernin tasoa, mutta voit parantaa vielä. Pyri päättämään toimeksianto jo ensimmäisellä käynnillä, kun asiakas on valmiina.`
+    });
+  } else {
+    items.push({
+      cls:'ok', icon:'🤝', title:'Tapaamiset → toimeksiannot toimii',
+      comp:`<b class="ok">${advFmtP(tt)}</b> · konserni ${advFmtP(km.tap_toimari)}`,
+      text:`Loistavaa! Saat valtaosan tapaamisistasi muutettua toimeksiannoiksi. Tämä on Roofin sweet spot.`
+    });
+  }
+
+  // 3. TOIMARI → KAUPPA % (hinnoittelu + näytöt)
+  const tk = s.toimari_kauppa;
+  if(tk < km.toimari_kauppa*0.65){
+    items.push({
+      cls:'crit', icon:'💰', title:'Hinnoittele kohteet realistisemmin',
+      comp:`Sinulla <b class="crit">${advFmtP(tk)}</b> · konserni ${advFmtP(km.toimari_kauppa)}`,
+      text:`Vain ${advFmtP(tk)} toimeksiannoistasi muuttuu kaupoiksi. Yleisin syy: aloitushinta on liian korkea. Tee hinta-arviosi alueen toteutuneiden kauppojen mukaan, älä asiakkaan toiveiden. Kerro asiakkaalle suoraan että realistinen hinnoittelu = nopea kauppa.`
+    });
+  } else if(tk < km.toimari_kauppa*0.9){
+    items.push({
+      cls:'warn', icon:'💰', title:'Toimeksiantojen klousaus voi parantua',
+      comp:`Sinulla <b class="warn">${advFmtP(tk)}</b> · konserni ${advFmtP(km.toimari_kauppa)}`,
+      text:`Hieman alle konsernin. Tarkista alkuperäinen pyyntihinta vs toteutunut — jos ero on suuri, hinnoittelu kannattaa miettiä uusiksi.`
+    });
+  } else {
+    items.push({
+      cls:'ok', icon:'💰', title:'Toimeksiannot kaupaksi tehokkaasti',
+      comp:`<b class="ok">${advFmtP(tk)}</b> · konserni ${advFmtP(km.toimari_kauppa)}`,
+      text:`Erinomaista — saat toimeksiannot muutettua kaupoiksi tehokkaasti.`
+    });
+  }
+
+  // 4. NÄYTTÖÄ / KAUPPA
+  const nk = s.naytot_kauppa;
+  if(nk > km.naytot_kauppa*1.4){
+    items.push({
+      cls:'crit', icon:'🏠', title:'Liikaa näyttöjä per kauppa',
+      comp:`Sinulla <b class="crit">${advFmtN(nk,0)}</b> · konserni ${advFmtN(km.naytot_kauppa)}`,
+      text:`Tarvitset ${advFmtN(nk,0)} näyttöä per kauppa, kun konsernissa riittää ${advFmtN(km.naytot_kauppa)}. Liian moni näyttö = väärää kohderyhmää tai hinta pielessä. Lue tarkemmin asunnon esittely, kysele asiakkaan tarpeita ennen näyttöä ja säädä hintaa rohkeammin jos näyttöjä on yli 10 ilman tarjousta.`
+    });
+  } else if(nk > km.naytot_kauppa*1.15){
+    items.push({
+      cls:'warn', icon:'🏠', title:'Näyttötehokkuus voi parantua',
+      comp:`Sinulla <b class="warn">${advFmtN(nk,0)}</b> · konserni ${advFmtN(km.naytot_kauppa)}`,
+      text:`Hieman konsernin yli. Kannattaa miettiä, mikä erottaa onnistuneet näytöt epäonnistuneista — esittelytapa, kohderyhmä, hinta?`
+    });
+  } else if(nk > 0) {
+    items.push({
+      cls:'ok', icon:'🏠', title:'Näyttötehokkuus hyvä',
+      comp:`<b class="ok">${advFmtN(nk,0)}</b> · konserni ${advFmtN(km.naytot_kauppa)}`,
+      text:`Näytöt → kaupat sujuu tehokkaasti.`
+    });
+  }
+
+  // 5. HINNOITTELU — käytä pyynti vs toteutunut dataa jos saatavilla
+  if(pyynti && pyynti.length){
+    const eroVals = pyynti.filter(d=>d.ero_pros!==null);
+    const avgEro = eroVals.length ? eroVals.reduce((s,d)=>s+d.ero_pros,0)/eroVals.length : 0;
+    const totKorj = pyynti.reduce((s,d)=>s+d.korjaukset,0);
+    const avgKorj = totKorj/pyynti.length;
+    if(avgEro < -7 || avgKorj > 0.5){
+      items.push({
+        cls:'crit', icon:'🎯', title:'Hinnoittele paremmin alusta lähtien',
+        comp:`Ero pyyntiin <b class="crit">${advFmtP(avgEro)}</b> · korj. <b class="crit">${advFmtN(avgKorj,2)}</b>/kohde`,
+        text:`Kohteesi myydään keskimäärin ${advFmtP(avgEro)} alle pyynnin, ja teet ${advFmtN(avgKorj,2)} hinnankorjausta per kohde. Liian korkea aloitushinta tuo turhia näyttöjä ja viivästyttää kauppaa. Tee hinta-arviosi data-pohjaisesti — käytä alueen toteutuneita kauppoja referenssinä.`
+      });
+    } else if(avgEro < -3 || avgKorj > 0.2){
+      items.push({
+        cls:'warn', icon:'🎯', title:'Hinnoitteluun panostaminen',
+        comp:`Ero pyyntiin <b class="warn">${advFmtP(avgEro)}</b> · korj. ${advFmtN(avgKorj,2)}/kohde`,
+        text:`Hinnankorjauksia tulee jonkin verran. Realistisempi aloitushinta vähentää turhaa työtä.`
+      });
+    } else {
+      items.push({
+        cls:'ok', icon:'🎯', title:'Hinnoittelu osuu kohdilleen',
+        comp:`Ero pyyntiin <b class="ok">${advFmtP(avgEro)}</b> · korj. ${advFmtN(avgKorj,2)}/kohde`,
+        text:`Hinnoittelusi on tarkka — vähän korjauksia ja kauppahinta lähellä pyyntiä.`
+      });
+    }
+  }
+
+  // 6. KESKIPALKKIO
+  const kp = s.keskipalkkio;
+  if(kp>0 && kp < km.keskipalkkio*0.7){
+    items.push({
+      cls:'warn', icon:'💵', title:'Kasvata kohteiden kokoluokkaa',
+      comp:`Sinulla <b class="warn">${advFmtE(kp)}</b> · konserni ${advFmtE(km.keskipalkkio)}`,
+      text:`Keskipalkkiosi on selvästi konsernin alapuolella. Tämä voi kertoa pienistä kohteista tai matalasta välityspalkkio-%:sta. Tähtää myös isompiin kohteisiin (omakotitalot, kalliit kerrostalokaksiot) ja perustele palkkio-% selkeästi.`
+    });
+  } else if(kp>0 && kp < km.keskipalkkio*0.9){
+    items.push({
+      cls:'warn', icon:'💵', title:'Keskipalkkio hieman alle konsernin',
+      comp:`Sinulla <b class="warn">${advFmtE(kp)}</b> · konserni ${advFmtE(km.keskipalkkio)}`,
+      text:`Voit kasvattaa keskipalkkiotasi joko isommilla kohteilla tai paremmalla palkkio-% neuvottelulla.`
+    });
+  }
+
+  return items;
+}
+
+function renderAdviceForAgent(agentName){
+  const el = document.getElementById('adviceContent');
+  if(!el) return;
+  const s = STATSIT_PER_VAL[agentName];
+  const pyynti = (typeof PYYNTI_PER_VAL!=='undefined') ? PYYNTI_PER_VAL[agentName] : null;
+  if(!s){
+    el.innerHTML = '<div class="adv-no-data">Ei tilastoja saatavilla</div>';
+    return;
+  }
+  const items = buildAdviceItems(s, pyynti);
+  const crits = items.filter(i=>i.cls==='crit').length;
+  const warns = items.filter(i=>i.cls==='warn').length;
+  const oks = items.filter(i=>i.cls==='ok').length;
+  let summary = '';
+  if(crits>=2) summary = `<b>Sinulla on ${crits} kriittistä kehityskohdetta</b> — keskity ensin näihin, niin myyntisi nousee selvästi. Käy lista läpi tärkeysjärjestyksessä.`;
+  else if(crits===1) summary = `Sinulla on yksi <b>kriittinen kehityskohde</b>. Korjaa se ensin — vaikutus myyntiisi näkyy nopeasti.`;
+  else if(warns>=2) summary = `Olet vahvalla pohjalla — <b>hienosäätämällä ${warns} osa-aluetta</b> nostat tulostasi.`;
+  else if(crits===0 && warns===0) summary = `🏆 <b>Loistavaa työtä!</b> Et ole konsernin keskiarvon alapuolella missään mitatussa osa-alueessa. Jatka samaan malliin.`;
+  else summary = `Pieniä hienosäätökohteita — pohja on hyvä.`;
+
+  let html = `<div class="adv-summary">${summary}</div><div class="adv-list">`;
+  // Sort: crits first, then warns, then ok
+  const order = {crit:0, warn:1, ok:2};
+  items.sort((a,b)=>order[a.cls]-order[b.cls]);
+  items.forEach(it=>{
+    html += `<div class="adv-item ${it.cls}">
+      <div class="adv-head">
+        <div class="adv-title">${advBadge(it.cls)} ${it.icon} ${it.title}</div>
+        <div class="adv-comp">${it.comp}</div>
+      </div>
+      <div class="adv-text">${it.text}</div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// Hook into loadAgent
+(function(){
+  if(typeof loadAgent !== 'function') return;
+  const orig = loadAgent;
+  loadAgent = function(){
+    const r = orig.apply(this, arguments);
+    const sel = document.getElementById('agSel');
+    if(sel && sel.value) renderAdviceForAgent(sel.value);
     return r;
   };
 })();
