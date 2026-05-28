@@ -519,6 +519,16 @@ function checkAuth(){
 
 <div class="page" id="page-pyynti">
   <style>
+    .pv-share{background:#28D1CD;color:#003848;padding:10px 18px;border-radius:10px;font-size:.82rem;display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .pv-share code{background:rgba(0,56,72,.12);padding:3px 10px;border-radius:6px;font-size:.78rem;cursor:pointer;user-select:all;font-family:'SF Mono',Monaco,monospace}
+    .pv-share code:hover{background:rgba(0,56,72,.2)}
+    .pv-share .pv-copy-msg{font-size:.74rem;opacity:0;transition:opacity .3s;font-weight:700}
+  </style>
+  <div class="pv-share">
+    🔗 Suora linkki tähän näkymään: <code id="pvShareUrl" onclick="pvCopyUrl()"></code>
+    <span class="pv-copy-msg" id="pvCopyMsg">✓ Kopioitu!</span>
+  </div>
+  <style>
     .pv-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
     .pv-kpi{background:#fff;border-radius:14px;border:1.5px solid #e8e4dc;padding:18px 20px;border-left:4px solid #28D1CD}
     .pv-kpi.navy{border-left-color:#003848}
@@ -642,6 +652,21 @@ function checkAuth(){
         <td class="num"><span class="pv-bar-bg"><span class="pv-bar-fill" style="width:${w}%"></span></span>${pvFmtN(d.avg_korj)}</td></tr>`;
     }).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:#A09074">Ei tuloksia</td></tr>';
   }
+  function pvUpdateShareUrl(){
+    const base = window.location.origin + window.location.pathname;
+    const url = base + '?tab=pyynti';
+    const el = document.getElementById('pvShareUrl');
+    if(el) el.textContent = url;
+  }
+  function pvCopyUrl(){
+    const url = document.getElementById('pvShareUrl').textContent;
+    navigator.clipboard.writeText(url).then(()=>{
+      const m = document.getElementById('pvCopyMsg');
+      m.style.opacity='1';
+      setTimeout(()=>m.style.opacity='0', 2000);
+    });
+  }
+  pvUpdateShareUrl();
   pvInit();
   </script>
 </div>
