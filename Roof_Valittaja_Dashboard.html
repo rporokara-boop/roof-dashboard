@@ -370,7 +370,7 @@ function checkAuth(){
       <div class="ctitle">💸 Pyynti vs Toteutunut</div>
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:14px">Myydyt kohteesi (lähde: Linear + Oikotie · 26.05.2026)</div>
       <style>
-        .pv-mini-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+        .pv-mini-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
         .pv-mini-kpi{background:#F5F1EC;border:1px solid #E0D9CF;border-radius:10px;padding:12px 14px;border-left:4px solid #28D1CD}
         .pv-mini-label{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#64748B;margin-bottom:5px}
         .pv-mini-val{font-size:1.4rem;font-weight:900;line-height:1;color:#181818}
@@ -385,7 +385,7 @@ function checkAuth(){
         .pv-erop{color:#16a34a;font-weight:700}
         .pv-eroz{color:#D97706;font-weight:700}
         .pv-no-data{padding:24px;text-align:center;color:#64748B;font-size:.84rem}
-        @media(max-width:700px){.pv-mini-kpis{grid-template-columns:repeat(2,1fr)} .pv-listing{grid-template-columns:1fr 1fr;font-size:.74rem}}
+        @media(max-width:900px){.pv-mini-kpis{grid-template-columns:repeat(2,1fr)} .pv-listing{grid-template-columns:1fr 1fr;font-size:.74rem}}
       </style>
       <div id="pvContent"></div>
     </div>
@@ -794,7 +794,8 @@ function pvRenderForAgent(agentName){
     <div class="pv-mini-kpi"><div class="pv-mini-label">Kohteet</div><div class="pv-mini-val">${n}</div><div class="pv-mini-sub">myytyä</div></div>
     <div class="pv-mini-kpi"><div class="pv-mini-label">Pyynti ka.</div><div class="pv-mini-val">${pvFmtE(totPyynti/n)}</div><div class="pv-mini-sub">alkuperäinen</div></div>
     <div class="pv-mini-kpi"><div class="pv-mini-label">Toteutunut ka.</div><div class="pv-mini-val">${pvFmtE(totTote/n)}</div><div class="pv-mini-sub">kauppahinta</div></div>
-    <div class="pv-mini-kpi"><div class="pv-mini-label">Ero pyyntiin</div><div class="pv-mini-val" style="color:${eroCls}">${pvFmtP(avgEro)}</div><div class="pv-mini-sub">korj. ka. ${pvFmtN(avgKorj)} / kohde</div></div>
+    <div class="pv-mini-kpi"><div class="pv-mini-label">Ero pyyntiin</div><div class="pv-mini-val" style="color:${eroCls}">${pvFmtP(avgEro)}</div><div class="pv-mini-sub">konsernin ka.</div></div>
+    <div class="pv-mini-kpi"><div class="pv-mini-label">Korjauksia / kohde</div><div class="pv-mini-val">${pvFmtN(avgKorj)}</div><div class="pv-mini-sub">keskiarvo</div></div>
   </div>`;
 
   // Sort by ero ascending (worst first)
