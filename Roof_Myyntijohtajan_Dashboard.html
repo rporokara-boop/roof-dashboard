@@ -653,8 +653,7 @@ function checkAuth(){
     }).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:#A09074">Ei tuloksia</td></tr>';
   }
   function pvUpdateShareUrl(){
-    const base = window.location.origin + window.location.pathname;
-    const url = base + '?tab=pyynti';
+    const url = 'https://roof-dashboards-f8a4a.web.app/Roof_Pyynti_vs_Toteutunut.html';
     const el = document.getElementById('pvShareUrl');
     if(el) el.textContent = url;
   }
